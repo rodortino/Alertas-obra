@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alertas Obra">
+<title>Alertas Obra RVC</title>
+<meta name="theme-color" content="#CC2929">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #CC2929;
+  --red-d: #A82020;
+  --red-l: #FDEAEA;
+  --cream: #F5F3EE;
+  --surface: #EEEAE3;
+  --surface2: #E6E1D9;
+  --border: #D9D4CB;
+  --text: #1A1916;
+  --text2: #5A5750;
+  --text3: #9A948C;
+  --white: #FFFFFF;
+  --green: #3B6D11;
+  --green-l: #EAF3DE;
+  --amber: #BA7517;
+  --amber-l: #FEF3DC;
+  --blue: #185FA5;
+  --blue-l: #E6F1FB;
+
+  /* Criticidad */
+  --crit-baja-bg: #EAF3DE; --crit-baja-fg: #3B6D11; --crit-baja-bd: #C0DD97;
+  --crit-media-bg: #FEF3DC; --crit-media-fg: #854F0B; --crit-media-bd: #FAC775;
+  --crit-alta-bg: #FAECE7; --crit-alta-fg: #993C1D; --crit-alta-bd: #F0997B;
+  --crit-critica-bg: #FCEBEB; --crit-critica-fg: #A32D2D; --crit-critica-bd: #F7C1C1;
+
+  /* Estado */
+  --est-activa-bg: #FCEBEB; --est-activa-fg: #A32D2D;
+  --est-gestion-bg: #E6F1FB; --est-gestion-fg: #185FA5;
+  --est-resuelta-bg: #EAF3DE; --est-resuelta-fg: #3B6D11;
+  --est-descartada-bg: #EEECEA; --est-descartada-fg: #6B6963;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); font-size: 14px; }
+
+/* ── LOGIN ── */
+.login-screen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; background: var(--cream); padding: 24px;
+}
+.login-logo { margin-bottom: 24px; }
+.login-logo img { width: 72px; height: auto; }
+.login-title { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.login-sub { font-size: 13px; color: var(--text3); text-align: center; margin-bottom: 28px; line-height: 1.5; }
+.login-btn {
+  display: flex; align-items: center; gap: 10px; padding: 12px 24px;
+  background: var(--red); color: #fff; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: background .15s;
+}
+.login-btn:hover { background: var(--red-d); }
+.login-err { margin-top: 14px; font-size: 12px; color: var(--red); text-align: center; }
+.acceso-denegado { background: var(--red-l); border: 1px solid var(--crit-critica-bd); border-radius: 6px; padding: 10px 14px; }
+
+/* ── LOADING ── */
+.loading-screen {
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; gap: 14px;
+}
+.spinner {
+  width: 28px; height: 28px; border: 3px solid var(--border);
+  border-top-color: var(--red); border-radius: 50%; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: var(--text3); }
+
+/* ── APP SHELL ── */
+.app { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* ── HEADER ── */
+.hdr {
+  background: var(--red); color: #fff; padding: 0 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px; flex-shrink: 0; position: relative; z-index: 20;
+}
+.hdr-left { display: flex; flex-direction: column; justify-content: center; }
+.hdr-left h1 { font-size: 15px; font-weight: 600; line-height: 1.2; }
+.hdr-left p { font-size: 10px; opacity: .65; font-weight: 400; }
+.hdr-right { display: flex; align-items: center; gap: 6px; }
+.hbtn {
+  background: rgba(255,255,255,.15); border: none; color: #fff; border-radius: 6px;
+  padding: 0 12px; height: 32px; font-size: 12px; font-weight: 500; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; white-space: nowrap; transition: background .15s;
+}
+.hbtn:hover { background: rgba(255,255,255,.25); }
+.hbtn.primary { background: rgba(255,255,255,.25); }
+.hdr-avatar {
+  width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+  font-weight: 600; cursor: pointer; color: #fff;
+}
+.sync-bar { display: flex; align-items: center; gap: 5px; font-size: 11px; opacity: .85; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(150,255,180,.85); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; flex: 1; overflow: hidden; }
+
+/* ── SIDEBAR DESKTOP ── */
+.sidebar {
+  width: 220px; flex-shrink: 0; background: var(--surface);
+  border-right: 1px solid var(--border); overflow-y: auto;
+  padding: 12px 0; display: flex; flex-direction: column; gap: 0;
+}
+.sb-section { padding: 8px 14px 4px; font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .8px; color: var(--text3); }
+.fblock { padding-bottom: 4px; }
+.fblock-title {
+  padding: 6px 14px; font-size: 12px; font-weight: 500; color: var(--text2);
+  cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  user-select: none;
+}
+.fblock-title:hover { color: var(--text); }
+.fblock-body { padding: 0 8px 4px; }
+.fopt {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 8px; border-radius: 5px; cursor: pointer; font-size: 12px;
+  color: var(--text2); transition: background .1s;
+}
+.fopt:hover { background: var(--surface2); color: var(--text); }
+.fopt.active { background: var(--red-l); color: var(--red); font-weight: 500; }
+.fcnt { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text3); }
+.fopt.active .fcnt { color: var(--red); }
+.clear-filters-btn {
+  margin: 6px 10px; padding: 5px; background: none; border: 1px solid var(--border);
+  border-radius: 5px; font-size: 11px; color: var(--text3); cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.clear-filters-btn:hover { background: var(--red-l); color: var(--red); border-color: var(--red); }
+
+/* ── CONTENT ── */
+.content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+/* ── SEARCH BAR ── */
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px; background: var(--cream); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10; flex-shrink: 0;
+}
+.search-icon { font-size: 14px; color: var(--text3); }
+.search {
+  flex: 1; border: none; background: none; font-family: 'DM Sans', sans-serif;
+  font-size: 13px; color: var(--text); outline: none;
+}
+.search::placeholder { color: var(--text3); }
+
+/* ── COL HEADER DESKTOP ── */
+.col-hdr {
+  display: grid;
+  grid-template-columns: 6px 1fr 90px 100px 100px 80px;
+  padding: 6px 16px; background: #EAE6DF; border-bottom: 1px solid var(--border);
+  font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase;
+  letter-spacing: .5px; position: sticky; top: 41px; z-index: 9;
+}
+
+/* ── ROWS ── */
+.trow {
+  display: grid;
+  grid-template-columns: 6px 1fr 90px 100px 100px 80px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  align-items: center; cursor: pointer; transition: background .1s; position: relative;
+}
+.trow:hover { background: var(--surface); }
+.trow .crit-bar { width: 4px; height: 100%; border-radius: 2px; margin-right: 0; }
+.ttitle { font-size: 13px; font-weight: 500; padding: 0 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trow-sub { font-size: 11px; color: var(--text3); padding: 0 12px; }
+.tuser { font-size: 11px; color: var(--text2); }
+.tdate { font-size: 11px; color: var(--text2); font-family: 'DM Mono', monospace; }
+.tcol { font-size: 12px; color: var(--text2); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; padding: 2px 7px; border-radius: 4px;
+  font-size: 10px; font-weight: 600; white-space: nowrap; border: 1px solid transparent;
+}
+.badge-baja    { background: var(--crit-baja-bg);    color: var(--crit-baja-fg);    border-color: var(--crit-baja-bd); }
+.badge-media   { background: var(--crit-media-bg);   color: var(--crit-media-fg);   border-color: var(--crit-media-bd); }
+.badge-alta    { background: var(--crit-alta-bg);    color: var(--crit-alta-fg);    border-color: var(--crit-alta-bd); }
+.badge-critica { background: var(--crit-critica-bg); color: var(--crit-critica-fg); border-color: var(--crit-critica-bd); }
+
+.badge-activa    { background: var(--est-activa-bg);    color: var(--est-activa-fg); }
+.badge-gestion   { background: var(--est-gestion-bg);   color: var(--est-gestion-fg); }
+.badge-resuelta  { background: var(--est-resuelta-bg);  color: var(--est-resuelta-fg); }
+.badge-descartada{ background: var(--est-descartada-bg);color: var(--est-descartada-fg); }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+.empty-state p { margin-top: 8px; font-size: 13px; }
+
+/* ── FAB MOBILE ── */
+.fab {
+  display: none; position: fixed; bottom: 24px; right: 20px;
+  width: 52px; height: 52px; background: var(--red); color: #fff;
+  border: none; border-radius: 50%; font-size: 26px; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(204,41,41,.4); z-index: 50;
+  align-items: center; justify-content: center;
+}
+
+/* ── MODAL ── */
+.modal-bg {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4);
+  z-index: 100; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--white); border-radius: 12px; width: 100%; max-width: 520px;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,.18);
+}
+.modal-inner { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.modal-title { font-size: 16px; font-weight: 600; color: var(--text); padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text3); }
+.fi, .fsel, .fta {
+  border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text);
+  background: var(--cream); outline: none; transition: border-color .15s;
+}
+.fi:focus, .fsel:focus, .fta:focus { border-color: var(--red); }
+.fta { resize: vertical; min-height: 72px; }
+.frow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-btns { display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
+.mbtn {
+  padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: 'DM Sans', sans-serif; border: 1px solid transparent;
+}
+.mbtn-cancel { background: var(--surface); color: var(--text2); border-color: var(--border); }
+.mbtn-cancel:hover { background: var(--surface2); }
+.mbtn-save { background: var(--red); color: #fff; }
+.mbtn-save:hover { background: var(--red-d); }
+.foto-placeholder {
+  border: 1.5px dashed var(--border); border-radius: 7px; padding: 14px;
+  text-align: center; color: var(--text3); font-size: 12px; background: var(--surface);
+}
+.foto-placeholder span { display: block; font-size: 20px; margin-bottom: 4px; }
+
+/* ── DETALLE PANEL (desktop) ── */
+.detail-panel {
+  width: 320px; flex-shrink: 0; border-left: 1px solid var(--border);
+  background: var(--white); overflow-y: auto; display: none; flex-direction: column;
+}
+.detail-panel.open { display: flex; }
+.dp-hdr {
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.dp-hdr-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.dp-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text3); padding: 0 4px; }
+.dp-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.dp-field label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text3); display: block; margin-bottom: 3px; }
+.dp-field p { font-size: 13px; color: var(--text); line-height: 1.5; }
+.dp-desc { font-size: 13px; color: var(--text); line-height: 1.6; background: var(--cream); border-radius: 6px; padding: 10px; }
+.dp-actions { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+.dp-actions label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text3); }
+.estado-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.estado-btn {
+  padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--border); background: var(--cream);
+  color: var(--text2); font-family: 'DM Sans', sans-serif; transition: all .15s;
+}
+.estado-btn:hover { border-color: var(--text2); color: var(--text); }
+.estado-btn.active-btn { background: var(--red); color: #fff; border-color: var(--red); }
+.dp-edit-btn {
+  width: 100%; padding: 8px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--text2);
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+}
+.dp-edit-btn:hover { background: var(--surface2); }
+.dp-del-btn {
+  width: 100%; padding: 8px; background: none; border: 1px solid var(--crit-critica-bd);
+  border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--crit-critica-fg);
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+}
+.dp-del-btn:hover { background: var(--red-l); }
+
+/* ── MOBILE VIEW ── */
+.mob-row {
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background .1s; display: flex; gap: 10px; align-items: flex-start;
+}
+.mob-row:hover { background: var(--surface); }
+.mob-crit-bar { width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch; min-height: 36px; }
+.mob-body { flex: 1; min-width: 0; }
+.mob-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.mob-meta { font-size: 11px; color: var(--text3); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mob-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--text); color: #fff; padding: 8px 16px; border-radius: 8px;
+  font-size: 13px; opacity: 0; transition: all .25s; z-index: 200; pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── RESPONSIVE ── */
+.desk-only { display: flex; }
+.mob-only  { display: none; }
+
+@media (max-width: 768px) {
+  .desk-only { display: none !important; }
+  .mob-only  { display: flex !important; }
+  .fab { display: flex; }
+  .app { height: 100dvh; }
+  .trow { grid-template-columns: 4px 1fr 80px; }
+  .hdr { height: 48px; }
+  .layout { overflow-y: auto; }
+  .content { overflow-y: unset; }
+  .detail-panel { display: none !important; }
+}
+
+/* ── MODAL BOTTOM SHEET MOBILE ── */
+@media (max-width: 768px) {
+  .modal-bg { align-items: flex-end; padding: 0; }
+  .modal { border-radius: 16px 16px 0 0; max-width: 100%; max-height: 92dvh; }
+}
+
+/* ── ESTADO SELECT COLORS ── */
+select option { font-family: 'DM Sans', sans-serif; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-logo">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+      <rect width="64" height="64" rx="12" fill="#CC2929"/>
+      <text x="12" y="44" font-family="DM Sans" font-weight="700" font-size="28" fill="white">rvc</text>
+    </svg>
+  </div>
+  <div class="login-title">Alertas Obra</div>
+  <div class="login-sub">Inicia sesión con tu cuenta<br>Google para continuar</div>
+  <button class="login-btn" id="login-btn" onclick="signIn()">
+    <svg width="18" height="18" viewBox="0 0 48 48">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    </svg>
+    Iniciar sesión con Google
+  </button>
+  <div class="login-err" id="login-err"></div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Cargando...</div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <div class="hdr">
+    <div class="hdr-left">
+      <h1>Alertas Obra <span style="font-size:9px;font-weight:400;opacity:.6">v1.0</span></h1>
+      <p id="hdr-date"></p>
+    </div>
+    <div class="hdr-right">
+      <div id="sync-bar" class="sync-bar desk-only">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span id="sync-text">Conectando...</span>
+      </div>
+      <button class="hbtn primary desk-only" onclick="openModal()">+ Nueva alerta</button>
+      <div class="hdr-avatar" id="hdr-avatar" onclick="signOut()" title="Cerrar sesión">?</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR DESKTOP -->
+    <div class="sidebar desk-only">
+      <div class="sb-section">Estado</div>
+      <div class="fblock">
+        <div class="fblock-body">
+          <div class="fopt active" onclick="sbFilter('estado','',this)"><span>Todas</span><span class="fcnt" id="cnt-all">0</span></div>
+          <div class="fopt" onclick="sbFilter('estado','Activa',this)"><span>🔴 Activa</span><span class="fcnt" id="cnt-activa">0</span></div>
+          <div class="fopt" onclick="sbFilter('estado','En gestión',this)"><span>🔵 En gestión</span><span class="fcnt" id="cnt-gestion">0</span></div>
+          <div class="fopt" onclick="sbFilter('estado','Resuelta',this)"><span>🟢 Resuelta</span><span class="fcnt" id="cnt-resuelta">0</span></div>
+          <div class="fopt" onclick="sbFilter('estado','Descartada',this)"><span>⚪ Descartada</span><span class="fcnt" id="cnt-descartada">0</span></div>
+        </div>
+      </div>
+
+      <div class="sb-section">Criticidad</div>
+      <div class="fblock">
+        <div class="fblock-body">
+          <div class="fopt" onclick="sbFilter('criticidad','Crítica',this)"><span>🔴 Crítica</span><span class="fcnt" id="cnt-critica">0</span></div>
+          <div class="fopt" onclick="sbFilter('criticidad','Alta',this)"><span>🟠 Alta</span><span class="fcnt" id="cnt-alta">0</span></div>
+          <div class="fopt" onclick="sbFilter('criticidad','Media',this)"><span>🟡 Media</span><span class="fcnt" id="cnt-media">0</span></div>
+          <div class="fopt" onclick="sbFilter('criticidad','Baja',this)"><span>🟢 Baja</span><span class="fcnt" id="cnt-baja">0</span></div>
+        </div>
+      </div>
+
+      <div class="sb-section">Tipo</div>
+      <div class="fblock">
+        <div class="fblock-body" id="tipo-filters"></div>
+      </div>
+
+      <div class="sb-section">Obra</div>
+      <div class="fblock">
+        <div class="fblock-body" id="obra-filters"></div>
+      </div>
+
+      <div class="sb-section">Reportado por</div>
+      <div class="fblock">
+        <div class="fblock-body" id="user-filters"></div>
+      </div>
+
+      <button class="clear-filters-btn" onclick="clearFilters()">✕ Limpiar filtros</button>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input class="search" id="search" placeholder="Buscar alerta..." autocomplete="off" oninput="render()">
+        <!-- Mobile: filtro rápido criticidad -->
+        <select class="fi mob-only" id="mob-crit-filter" style="padding:4px 8px;font-size:12px;height:28px" onchange="render()">
+          <option value="">Todas</option>
+          <option value="Crítica">🔴 Crítica</option>
+          <option value="Alta">🟠 Alta</option>
+          <option value="Media">🟡 Media</option>
+          <option value="Baja">🟢 Baja</option>
+        </select>
+      </div>
+
+      <!-- COLUMN HEADERS DESKTOP -->
+      <div class="col-hdr desk-only">
+        <span></span>
+        <span>Descripción</span>
+        <span>Obra</span>
+        <span>Tipo</span>
+        <span>Criticidad</span>
+        <span>Estado</span>
+      </div>
+
+      <div id="alert-list"></div>
+    </div>
+
+    <!-- DETAIL PANEL DESKTOP -->
+    <div class="detail-panel" id="detail-panel">
+      <div class="dp-hdr">
+        <span class="dp-hdr-title">Detalle</span>
+        <button class="dp-close" onclick="closeDetail()">✕</button>
+      </div>
+      <div class="dp-body" id="dp-body"></div>
+      <div class="dp-actions" id="dp-actions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB MOBILE -->
+<button class="fab mob-only" onclick="openModal()" aria-label="Nueva alerta">+</button>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-inner">
+      <div class="modal-title" id="modal-title">Nueva alerta</div>
+
+      <!-- Descripción (único obligatorio) -->
+      <div class="fg">
+        <label class="fl">Descripción <span style="color:var(--red)">*</span></label>
+        <textarea class="fta" id="f-desc" placeholder="¿Qué está pasando? Describe la situación..." rows="3"></textarea>
+      </div>
+
+      <div class="frow">
+        <div class="fg">
+          <label class="fl">Obra</label>
+          <select class="fsel" id="f-obra">
+            <option value="">Sin especificar</option>
+            <option>Obra 1</option>
+            <option>Obra 2</option>
+            <option>Obra 3</option>
+            <option>Obra 4</option>
+            <option>Obra 5</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Criticidad</label>
+          <select class="fsel" id="f-criticidad">
+            <option value="">Sin clasificar</option>
+            <option value="Baja">🟢 Baja</option>
+            <option value="Media">🟡 Media</option>
+            <option value="Alta">🟠 Alta</option>
+            <option value="Crítica">🔴 Crítica</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Tipo de alerta</label>
+        <select class="fsel" id="f-tipo">
+          <option value="">Sin categorizar</option>
+          <option value="C1 - Personas">C1 · Personas</option>
+          <option value="C2 - Ejecución">C2 · Ejecución</option>
+          <option value="C3 - Abastecimiento">C3 · Abastecimiento</option>
+          <option value="C4 - Proyecto">C4 · Proyecto</option>
+          <option value="C5 - Inmobiliaria">C5 · Inmobiliaria</option>
+          <option value="C6 - Seguridad">C6 · Seguridad</option>
+          <option value="C7 - Entorno y comunidad">C7 · Entorno y comunidad</option>
+          <option value="C8 - Gestión">C8 · Gestión</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Estado</label>
+        <select class="fsel" id="f-estado">
+          <option value="Activa">🔴 Activa</option>
+          <option value="En gestión">🔵 En gestión</option>
+          <option value="Resuelta">🟢 Resuelta</option>
+          <option value="Descartada">⚪ Descartada</option>
+        </select>
+      </div>
+
+      <!-- Foto placeholder -->
+      <div class="fg">
+        <label class="fl">Foto / evidencia</label>
+        <div class="foto-placeholder">
+          <span>📷</span>
+          Próximamente — adjuntar foto desde cámara
+        </div>
+      </div>
+
+      <div class="modal-btns">
+        <button class="mbtn mbtn-cancel" onclick="closeModal()">Cancelar</button>
+        <button class="mbtn mbtn-save" onclick="saveAlert()">Guardar alerta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCmUlkihNfxV8CyHOZ-38gcEx27jqU0z04",
+  authDomain: "rvc-pilotos-app.firebaseapp.com",
+  projectId: "rvc-pilotos-app",
+  storageBucket: "rvc-pilotos-app.firebasestorage.app",
+  messagingSenderId: "304566913753",
+  appId: "1:304566913753:web:f1936de8ca85188338ccc8"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db    = getFirestore(fbApp);
+const auth  = getAuth(fbApp);
+const provider = new GoogleAuthProvider();
+
+const USUARIOS_AUTORIZADOS = [
+  'rodortino@gmail.com',
+  'rodolfo.vassallo@gmail.com'
+];
+
+const COLECCION = 'piloto2_alertas';
+
+// ── ESTADO ──────────────────────────────────────────────────────
+let currentUser = null;
+let alerts = [];
+let unsubscribe = null;
+let editId = null;
+let selectedId = null;
+let filters = { estado: '', criticidad: '', tipo: '', obra: '', usuario: '' };
+
+// ── HELPERS FECHA ────────────────────────────────────────────────
+const DIAS  = ['dom','lun','mar','mié','jue','vie','sáb'];
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function setHeaderDate(){
+  const d = new Date();
+  document.getElementById('hdr-date').textContent =
+    `${DIAS[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`;
+}
+function fmtFecha(ts){
+  if(!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return `${d.getDate()} ${MESES[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function fmtFechaLarga(ts){
+  if(!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return `${DIAS[d.getDay()]} ${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// ── SYNC STATUS ──────────────────────────────────────────────────
+function setSyncStatus(type, text){
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  if(txt) txt.textContent = text;
+  if(dot) dot.style.background =
+    type==='ok'    ? 'rgba(150,255,180,.85)' :
+    type==='error' ? '#ff8080' : '#ffcc44';
+}
+
+// ── TOAST ────────────────────────────────────────────────────────
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+// ── AUTH ─────────────────────────────────────────────────────────
+window.signIn = async function(){
+  document.getElementById('login-err').textContent = '';
+  try { await signInWithPopup(auth, provider); }
+  catch(e){
+    const err = document.getElementById('login-err');
+    if(e.code==='auth/popup-blocked') err.textContent = 'Activa popups e intenta de nuevo.';
+    else if(e.code==='auth/popup-closed-by-user') err.textContent = 'Cancelaste el inicio de sesión.';
+    else err.textContent = 'Error: '+(e.message||'desconocido');
+  }
+};
+window.signOut = async function(){
+  if(!confirm('¿Cerrar sesión?')) return;
+  if(unsubscribe) unsubscribe();
+  await fbSignOut(auth);
+};
+
+onAuthStateChanged(auth, user => {
+  if(user){
+    const email = (user.email||'').toLowerCase();
+    if(!USUARIOS_AUTORIZADOS.includes(email)){
+      fbSignOut(auth);
+      document.getElementById('login-err').innerHTML =
+        `<div class="acceso-denegado">⛔ <strong>${email}</strong> no tiene acceso.</div>`;
+      return;
+    }
+    currentUser = user;
+    initApp();
+  } else {
+    currentUser = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loading-screen').style.display = 'none';
+    if(unsubscribe){ unsubscribe(); unsubscribe = null; }
+  }
+});
+
+// ── INIT ─────────────────────────────────────────────────────────
+function initApp(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('loading-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  setHeaderDate();
+  const av = document.getElementById('hdr-avatar');
+  av.textContent = (currentUser.displayName||currentUser.email||'?')[0].toUpperCase();
+  av.title = `${currentUser.displayName||''} (${currentUser.email}) — click para salir`;
+  setSyncStatus('syncing','Conectando...');
+  startListener();
+}
+
+// ── LISTENER TIEMPO REAL ─────────────────────────────────────────
+function startListener(){
+  const q = query(collection(db, COLECCION), orderBy('creadoEn','desc'));
+  unsubscribe = onSnapshot(q,
+    snap => {
+      alerts = snap.docs.map(d=>({id:d.id,...d.data()}));
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      setSyncStatus('ok','En vivo');
+      render();
+      if(selectedId){
+        const a = alerts.find(x=>x.id===selectedId);
+        if(a) renderDetail(a); else closeDetail();
+      }
+    },
+    err => {
+      console.error(err);
+      setSyncStatus('error','Error de conexión');
+    }
+  );
+}
+
+// ── CRITICIDAD HELPERS ───────────────────────────────────────────
+function critColor(c){
+  return c==='Crítica'?'#E24B4A':c==='Alta'?'#D85A30':c==='Media'?'#BA7517':'#639922';
+}
+function critBadge(c){
+  if(!c) return '<span class="badge" style="background:#eee;color:#888">Sin clasificar</span>';
+  const cls = c==='Crítica'?'critica':c==='Alta'?'alta':c==='Media'?'media':'baja';
+  return `<span class="badge badge-${cls}">${c}</span>`;
+}
+function estadoBadge(e){
+  if(!e) return '';
+  const cls = e==='Activa'?'activa':e==='En gestión'?'gestion':e==='Resuelta'?'resuelta':'descartada';
+  return `<span class="badge badge-${cls}">${e}</span>`;
+}
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+// ── FILTRADO ─────────────────────────────────────────────────────
+function getFiltered(){
+  const q = (document.getElementById('search')?.value||'').toLowerCase();
+  const mobCrit = document.getElementById('mob-crit-filter')?.value||'';
+  return alerts.filter(a=>{
+    if(filters.estado && a.estado!==filters.estado) return false;
+    if(filters.criticidad && a.criticidad!==filters.criticidad) return false;
+    if(mobCrit && a.criticidad!==mobCrit) return false;
+    if(filters.tipo && a.tipo!==filters.tipo) return false;
+    if(filters.obra && a.obra!==filters.obra) return false;
+    if(filters.usuario && a.creadoPor!==filters.usuario) return false;
+    if(q && !(
+      (a.descripcion||'').toLowerCase().includes(q) ||
+      (a.obra||'').toLowerCase().includes(q) ||
+      (a.tipo||'').toLowerCase().includes(q)
+    )) return false;
+    return true;
+  });
+}
+
+// ── RENDER ────────────────────────────────────────────────────────
+function render(){
+  const filtered = getFiltered();
+  const isMob = window.innerWidth <= 768;
+  const list = document.getElementById('alert-list');
+
+  // Contadores sidebar
+  document.getElementById('cnt-all').textContent       = alerts.length;
+  document.getElementById('cnt-activa').textContent    = alerts.filter(a=>a.estado==='Activa').length;
+  document.getElementById('cnt-gestion').textContent   = alerts.filter(a=>a.estado==='En gestión').length;
+  document.getElementById('cnt-resuelta').textContent  = alerts.filter(a=>a.estado==='Resuelta').length;
+  document.getElementById('cnt-descartada').textContent= alerts.filter(a=>a.estado==='Descartada').length;
+  document.getElementById('cnt-critica').textContent   = alerts.filter(a=>a.criticidad==='Crítica').length;
+  document.getElementById('cnt-alta').textContent      = alerts.filter(a=>a.criticidad==='Alta').length;
+  document.getElementById('cnt-media').textContent     = alerts.filter(a=>a.criticidad==='Media').length;
+  document.getElementById('cnt-baja').textContent      = alerts.filter(a=>a.criticidad==='Baja').length;
+
+  // Filtros dinámicos: tipo
+  const tipos = [...new Set(alerts.map(a=>a.tipo).filter(Boolean))].sort();
+  document.getElementById('tipo-filters').innerHTML = tipos.map(t=>
+    `<div class="fopt ${filters.tipo===t?'active':''}" onclick="sbFilter('tipo','${esc(t)}',this)">
+      <span>${esc(t)}</span>
+      <span class="fcnt">${alerts.filter(a=>a.tipo===t).length}</span>
+    </div>`
+  ).join('') || '<div style="padding:4px 8px;font-size:11px;color:var(--text3)">Sin datos</div>';
+
+  // Filtros dinámicos: obra
+  const obras = [...new Set(alerts.map(a=>a.obra).filter(Boolean))].sort();
+  document.getElementById('obra-filters').innerHTML = obras.map(o=>
+    `<div class="fopt ${filters.obra===o?'active':''}" onclick="sbFilter('obra','${esc(o)}',this)">
+      <span>${esc(o)}</span>
+      <span class="fcnt">${alerts.filter(a=>a.obra===o).length}</span>
+    </div>`
+  ).join('') || '<div style="padding:4px 8px;font-size:11px;color:var(--text3)">Sin datos</div>';
+
+  // Filtros dinámicos: usuario
+  const usuarios = [...new Set(alerts.map(a=>a.creadoPor).filter(Boolean))];
+  document.getElementById('user-filters').innerHTML = usuarios.map(u=>
+    `<div class="fopt ${filters.usuario===u?'active':''}" onclick="sbFilter('usuario','${esc(u)}',this)">
+      <span>${esc(u.split('@')[0])}</span>
+      <span class="fcnt">${alerts.filter(a=>a.creadoPor===u).length}</span>
+    </div>`
+  ).join('') || '<div style="padding:4px 8px;font-size:11px;color:var(--text3)">Sin datos</div>';
+
+  if(filtered.length===0){
+    list.innerHTML = `<div class="empty-state">
+      <div style="font-size:32px">🚧</div>
+      <p>${alerts.length===0?'No hay alertas registradas. Crea la primera.':'No hay alertas que coincidan con los filtros.'}</p>
+    </div>`;
+    return;
+  }
+
+  if(isMob){
+    list.innerHTML = filtered.map(a=>{
+      const color = critColor(a.criticidad);
+      const meta = [a.obra, a.tipo, a.creadoPor?.split('@')[0]].filter(Boolean).join(' · ');
+      return `<div class="mob-row" onclick="openDetail('${a.id}')">
+        <div class="mob-crit-bar" style="background:${color}"></div>
+        <div class="mob-body">
+          <div class="mob-title">${esc(a.descripcion||'')}</div>
+          <div class="mob-meta">${esc(meta)} · ${fmtFecha(a.creadoEn)}</div>
+          <div class="mob-badges">
+            ${critBadge(a.criticidad)}
+            ${estadoBadge(a.estado)}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    list.innerHTML = filtered.map(a=>{
+      const color = critColor(a.criticidad);
+      const sel = selectedId===a.id;
+      return `<div class="trow ${sel?'selected':''}" onclick="openDetail('${a.id}')" style="background:${sel?'var(--red-l)':''}">
+        <div style="width:4px;height:36px;border-radius:2px;background:${color}"></div>
+        <div>
+          <div class="ttitle">${esc(a.descripcion||'')}</div>
+          <div class="trow-sub">${esc(a.creadoPor?.split('@')[0]||'')} · ${fmtFecha(a.creadoEn)}</div>
+        </div>
+        <div class="tcol">${esc(a.obra||'—')}</div>
+        <div class="tcol" style="font-size:11px">${esc(a.tipo||'—')}</div>
+        <div>${critBadge(a.criticidad)}</div>
+        <div>${estadoBadge(a.estado)}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ── DETAIL PANEL ─────────────────────────────────────────────────
+window.openDetail = function(id){
+  const a = alerts.find(x=>x.id===id);
+  if(!a) return;
+  selectedId = id;
+  render();
+  if(window.innerWidth <= 768){
+    // En mobile: abre modal de detalle
+    openDetailMobile(a);
+  } else {
+    renderDetail(a);
+    document.getElementById('detail-panel').classList.add('open');
+  }
+};
+
+function renderDetail(a){
+  const body = document.getElementById('dp-body');
+  body.innerHTML = `
+    <div class="dp-field">
+      <label>Descripción</label>
+      <div class="dp-desc">${esc(a.descripcion||'—')}</div>
+    </div>
+    <div class="dp-field">
+      <label>Criticidad</label>
+      <p>${critBadge(a.criticidad||'')} ${a.criticidad?'':'Sin clasificar'}</p>
+    </div>
+    <div class="dp-field">
+      <label>Estado</label>
+      <p>${estadoBadge(a.estado||'')}</p>
+    </div>
+    <div class="dp-field">
+      <label>Obra</label>
+      <p>${esc(a.obra||'Sin especificar')}</p>
+    </div>
+    <div class="dp-field">
+      <label>Tipo de alerta</label>
+      <p>${esc(a.tipo||'Sin categorizar')}</p>
+    </div>
+    <div class="dp-field">
+      <label>Reportado por</label>
+      <p>${esc(a.creadoPor||'—')}</p>
+    </div>
+    <div class="dp-field">
+      <label>Fecha y hora</label>
+      <p>${fmtFechaLarga(a.creadoEn)}</p>
+    </div>
+  `;
+
+  const actions = document.getElementById('dp-actions');
+  const ESTADOS = ['Activa','En gestión','Resuelta','Descartada'];
+  actions.innerHTML = `
+    <label>Cambiar estado</label>
+    <div class="estado-btns">
+      ${ESTADOS.map(e=>`
+        <button class="estado-btn ${a.estado===e?'active-btn':''}"
+          onclick="cambiarEstado('${a.id}','${e}')">${e}</button>
+      `).join('')}
+    </div>
+    <button class="dp-edit-btn" onclick="openModal('${a.id}')">✏️ Editar alerta</button>
+    <button class="dp-del-btn" onclick="deleteAlert('${a.id}')">Eliminar alerta</button>
+  `;
+}
+
+function openDetailMobile(a){
+  // Reutiliza el modal con vista de detalle
+  editId = null;
+  document.getElementById('modal-title').textContent = 'Detalle de alerta';
+  const inner = document.querySelector('.modal-inner');
+  const ESTADOS = ['Activa','En gestión','Resuelta','Descartada'];
+  inner.innerHTML = `
+    <div class="modal-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Detalle</span>
+      <button onclick="closeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+    </div>
+    <div class="dp-desc" style="font-size:14px;line-height:1.6">${esc(a.descripcion||'—')}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${critBadge(a.criticidad)} ${estadoBadge(a.estado)}
+      ${a.obra?`<span class="badge" style="background:var(--surface2);color:var(--text2)">${esc(a.obra)}</span>`:''}
+    </div>
+    ${a.tipo?`<div style="font-size:12px;color:var(--text3)">${esc(a.tipo)}</div>`:''}
+    <div style="font-size:11px;color:var(--text3)">
+      Por ${esc(a.creadoPor?.split('@')[0]||'—')} · ${fmtFechaLarga(a.creadoEn)}
+    </div>
+    <div>
+      <div class="fl" style="margin-bottom:6px">Cambiar estado</div>
+      <div class="estado-btns">
+        ${ESTADOS.map(e=>`
+          <button class="estado-btn ${a.estado===e?'active-btn':''}"
+            onclick="cambiarEstado('${a.id}','${e}');closeModal()">
+            ${e}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="mbtn mbtn-cancel" style="flex:1" onclick="closeModal();setTimeout(()=>openModal('${a.id}'),100)">✏️ Editar</button>
+      <button class="mbtn" style="flex:1;background:var(--red-l);color:var(--red);border:1px solid var(--crit-critica-bd)"
+        onclick="if(confirm('¿Eliminar?')){deleteAlert('${a.id}');closeModal()}">Eliminar</button>
+    </div>
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+window.closeDetail = function(){
+  selectedId = null;
+  document.getElementById('detail-panel').classList.remove('open');
+  render();
+};
+
+// ── CAMBIAR ESTADO ────────────────────────────────────────────────
+window.cambiarEstado = async function(id, nuevoEstado){
+  try {
+    await updateDoc(doc(db, COLECCION, id), { estado: nuevoEstado });
+    showToast(`✓ Estado → ${nuevoEstado}`);
+  } catch(e){
+    showToast('⚠ Error al actualizar');
+    console.error(e);
+  }
+};
+
+// ── MODAL CREAR / EDITAR ──────────────────────────────────────────
+window.openModal = function(id){
+  editId = id || null;
+  // Restaurar modal a su forma de formulario
+  const inner = document.querySelector('.modal-inner');
+  inner.innerHTML = `
+    <div class="modal-title" id="modal-title">${id?'Editar alerta':'Nueva alerta'}</div>
+    <div class="fg">
+      <label class="fl">Descripción <span style="color:var(--red)">*</span></label>
+      <textarea class="fta" id="f-desc" placeholder="¿Qué está pasando? Describe la situación..." rows="3"></textarea>
+    </div>
+    <div class="frow">
+      <div class="fg">
+        <label class="fl">Obra</label>
+        <select class="fsel" id="f-obra">
+          <option value="">Sin especificar</option>
+          <option>Obra 1</option><option>Obra 2</option><option>Obra 3</option>
+          <option>Obra 4</option><option>Obra 5</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Criticidad</label>
+        <select class="fsel" id="f-criticidad">
+          <option value="">Sin clasificar</option>
+          <option value="Baja">🟢 Baja</option>
+          <option value="Media">🟡 Media</option>
+          <option value="Alta">🟠 Alta</option>
+          <option value="Crítica">🔴 Crítica</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Tipo de alerta</label>
+      <select class="fsel" id="f-tipo">
+        <option value="">Sin categorizar</option>
+        <option value="C1 - Personas">C1 · Personas</option>
+        <option value="C2 - Ejecución">C2 · Ejecución</option>
+        <option value="C3 - Abastecimiento">C3 · Abastecimiento</option>
+        <option value="C4 - Proyecto">C4 · Proyecto</option>
+        <option value="C5 - Inmobiliaria">C5 · Inmobiliaria</option>
+        <option value="C6 - Seguridad">C6 · Seguridad</option>
+        <option value="C7 - Entorno y comunidad">C7 · Entorno y comunidad</option>
+        <option value="C8 - Gestión">C8 · Gestión</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Estado</label>
+      <select class="fsel" id="f-estado">
+        <option value="Activa">🔴 Activa</option>
+        <option value="En gestión">🔵 En gestión</option>
+        <option value="Resuelta">🟢 Resuelta</option>
+        <option value="Descartada">⚪ Descartada</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Foto / evidencia</label>
+      <div class="foto-placeholder"><span>📷</span>Próximamente — adjuntar foto desde cámara</div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="mbtn mbtn-save" onclick="saveAlert()">Guardar alerta</button>
+    </div>
+  `;
+
+  if(id){
+    const a = alerts.find(x=>x.id===id);
+    if(a){
+      document.getElementById('f-desc').value      = a.descripcion||'';
+      document.getElementById('f-obra').value      = a.obra||'';
+      document.getElementById('f-criticidad').value= a.criticidad||'';
+      document.getElementById('f-tipo').value      = a.tipo||'';
+      document.getElementById('f-estado').value    = a.estado||'Activa';
+    }
+  }
+  document.getElementById('modal-bg').classList.add('open');
+  setTimeout(()=>document.getElementById('f-desc')?.focus(), 200);
+};
+
+window.closeModal = function(){
+  document.getElementById('modal-bg').classList.remove('open');
+  editId = null;
+};
+
+window.saveAlert = async function(){
+  const desc = document.getElementById('f-desc')?.value.trim();
+  if(!desc){ document.getElementById('f-desc')?.focus(); showToast('⚠ La descripción es obligatoria'); return; }
+  const obra       = document.getElementById('f-obra')?.value||'';
+  const criticidad = document.getElementById('f-criticidad')?.value||'';
+  const tipo       = document.getElementById('f-tipo')?.value||'';
+  const estado     = document.getElementById('f-estado')?.value||'Activa';
+
+  try {
+    if(editId){
+      await updateDoc(doc(db, COLECCION, editId), { descripcion:desc, obra, criticidad, tipo, estado });
+      showToast('✓ Alerta actualizada');
+    } else {
+      await addDoc(collection(db, COLECCION), {
+        descripcion: desc, obra, criticidad, tipo, estado,
+        creadoPor: currentUser.email,
+        creadoEn: serverTimestamp()
+      });
+      showToast('✓ Alerta registrada');
+    }
+    closeModal();
+  } catch(e){
+    showToast('⚠ Error al guardar');
+    console.error(e);
+  }
+};
+
+// ── ELIMINAR ──────────────────────────────────────────────────────
+window.deleteAlert = async function(id){
+  if(!confirm('¿Eliminar esta alerta? Esta acción no se puede deshacer.')) return;
+  try {
+    await deleteDoc(doc(db, COLECCION, id));
+    if(selectedId===id){ selectedId=null; closeDetail(); }
+    showToast('✓ Alerta eliminada');
+  } catch(e){
+    showToast('⚠ Error al eliminar');
+    console.error(e);
+  }
+};
+
+// ── FILTROS ───────────────────────────────────────────────────────
+window.sbFilter = function(k, v, el){
+  // Toggle: si ya está activo, limpiar
+  if(filters[k]===v){ filters[k]=''; }
+  else { filters[k]=v; }
+  // Actualizar clase active en el sidebar
+  if(el){
+    el.closest('.fblock-body')?.querySelectorAll('.fopt').forEach(e=>e.classList.remove('active'));
+    if(filters[k]===v) el.classList.add('active');
+  }
+  render();
+};
+
+window.clearFilters = function(){
+  filters = { estado:'', criticidad:'', tipo:'', obra:'', usuario:'' };
+  document.querySelectorAll('.fopt').forEach(e=>e.classList.remove('active'));
+  // Reactivar "Todas" en estado
+  const todas = document.querySelector('.fopt');
+  if(todas) todas.classList.add('active');
+  if(document.getElementById('mob-crit-filter')) document.getElementById('mob-crit-filter').value='';
+  render();
+};
+
+window.toggleFblock = function(el){
+  const body = el.nextElementSibling;
+  body.style.display = body.style.display==='none'?'':'none';
+};
+
+// ── RESIZE ────────────────────────────────────────────────────────
+window.addEventListener('resize', render);
+
+</script>
+</body>
+</html>
