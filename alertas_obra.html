@@ -546,7 +546,7 @@ select option { font-family: 'DM Sans', sans-serif; }
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp }
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, query, orderBy, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
@@ -565,11 +565,7 @@ const db    = getFirestore(fbApp);
 const auth  = getAuth(fbApp);
 const provider = new GoogleAuthProvider();
 
-const USUARIOS_AUTORIZADOS = [
-  'rodortino@gmail.com',
-  'rodolfo.vassallo@gmail.com'
-];
-
+const APP_ID    = 'piloto2_alertas';
 const COLECCION = 'piloto2_alertas';
 
 // ── ESTADO ──────────────────────────────────────────────────────
@@ -633,17 +629,31 @@ window.signOut = async function(){
   await fbSignOut(auth);
 };
 
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, async user => {
   if(user){
     const email = (user.email||'').toLowerCase();
-    if(!USUARIOS_AUTORIZADOS.includes(email)){
-      fbSignOut(auth);
-      document.getElementById('login-err').innerHTML =
-        `<div class="acceso-denegado">⛔ <strong>${email}</strong> no tiene acceso.</div>`;
-      return;
+    try {
+      const userDoc = await getDoc(doc(db, 'plataforma_usuarios', email));
+      const datos = userDoc.exists() ? userDoc.data() : null;
+      const tieneAcceso = datos && datos.activo !== false &&
+                          (datos.apps || []).includes(APP_ID);
+      if(!tieneAcceso){
+        let msg;
+        if(!datos)              msg = `Tu cuenta <strong>${email}</strong> no está registrada en la plataforma.`;
+        else if(datos.activo === false) msg = `Tu cuenta está desactivada.`;
+        else                    msg = `No tienes acceso a esta app (${APP_ID}).`;
+        await fbSignOut(auth);
+        document.getElementById('login-err').innerHTML =
+          `<div class="acceso-denegado">⛔ ${msg}</div>`;
+        return;
+      }
+      currentUser = user;
+      initApp();
+    } catch(e){
+      console.error('Error verificando acceso:', e);
+      await fbSignOut(auth);
+      document.getElementById('login-err').textContent = 'Error al verificar acceso. Intenta de nuevo.';
     }
-    currentUser = user;
-    initApp();
   } else {
     currentUser = null;
     document.getElementById('login-screen').style.display = 'flex';
