@@ -778,14 +778,14 @@ function buildForm(a){
       <div class="fg">
         <label class="fl">Obra</label>
         <select class="fsel" id="f-obra">
-          <option value="">Sin especificar</option>
+          <option value="" disabled selected>Seleccionar obra *</option>
           ${['Obra 1','Obra 2','Obra 3','Obra 4','Obra 5'].map(o=>`<option${a?.obra===o?' selected':''}>${o}</option>`).join('')}
         </select>
       </div>
       <div class="fg">
         <label class="fl">Criticidad</label>
         <select class="fsel" id="f-criticidad">
-          <option value="">Sin clasificar</option>
+          <option value="" disabled selected>Seleccionar *</option>
           ${['Baja','Media','Alta','Crítica'].map(c=>`<option${a?.criticidad===c?' selected':''}>${c}</option>`).join('')}
         </select>
       </div>
@@ -793,18 +793,18 @@ function buildForm(a){
     <div class="fg">
       <label class="fl">Categoría</label>
       <select class="fsel" id="f-tipo">
-        <option value="">Sin categorizar</option>
+        <option value="" disabled selected>Seleccionar categoría *</option>
         ${['C1 - Personas','C2 - Ejecución','C3 - Abastecimiento','C4 - Proyecto','C5 - Inmobiliaria','C6 - Seguridad','C7 - Entorno y comunidad','C8 - Gestión']
           .map(t=>`<option value="${t}"${a?.tipo===t?' selected':''}>${t.replace(' - ',' · ')}</option>`).join('')}
       </select>
     </div>
-    <div class="fg">
+    ${a ? `<div class="fg">
       <label class="fl">Estado</label>
       <select class="fsel" id="f-estado">
         ${[['Activa','🔴'],['En gestión','🔵'],['Resuelta','🟢'],['Descartada','⚪']]
           .map(([e,ic])=>`<option value="${e}"${(a?.estado||'Activa')===e?' selected':''}>${ic} ${e}</option>`).join('')}
       </select>
-    </div>
+    </div>` : ''}
     <div class="fg">
       <label class="fl">Fotos y adjuntos</label>
       <div class="adjunto-area">
@@ -837,11 +837,28 @@ window.closeModal=function(){
 
 window.saveAlert=async function(){
   const desc=document.getElementById('f-desc')?.value.trim();
-  if(!desc){document.getElementById('f-desc')?.focus();showToast('⚠ La descripción es obligatoria');return;}
   const obra       =document.getElementById('f-obra')?.value||'';
   const criticidad =document.getElementById('f-criticidad')?.value||'';
   const tipo       =document.getElementById('f-tipo')?.value||'';
   const estado     =document.getElementById('f-estado')?.value||'Activa';
+
+  // Validación campos obligatorios
+  if(!desc){
+    document.getElementById('f-desc')?.focus();
+    showToast('⚠ La descripción es obligatoria'); return;
+  }
+  if(!obra){
+    document.getElementById('f-obra')?.focus();
+    showToast('⚠ Debes seleccionar una obra'); return;
+  }
+  if(!criticidad){
+    document.getElementById('f-criticidad')?.focus();
+    showToast('⚠ Debes seleccionar la criticidad'); return;
+  }
+  if(!tipo){
+    document.getElementById('f-tipo')?.focus();
+    showToast('⚠ Debes seleccionar una categoría'); return;
+  }
 
   const btn=document.getElementById('btn-guardar');
   if(btn){btn.disabled=true;btn.textContent=pendingFiles.length?'Subiendo...':'Guardando...';}
@@ -852,7 +869,7 @@ window.saveAlert=async function(){
       showToast('✓ Alerta actualizada');
     } else {
       await addDoc(collection(db,COLECCION),{
-        descripcion:desc,obra,criticidad,tipo,estado,
+        descripcion:desc,obra,criticidad,tipo,estado:'Activa',
         creadoPor:currentUser.email,
         creadoNombre:currentUser.displayName||currentUser.email.split('@')[0],
         creadoEn:serverTimestamp(),
