@@ -207,6 +207,23 @@ body { font-family: 'DM Sans', sans-serif; }
 .filter-divider { width:1px; height:20px; background:var(--border); flex-shrink:0; margin:0 2px; }
 .filter-select { flex-shrink:0; border:1px solid var(--border); border-radius:20px; padding:5px 10px; font-family:'DM Sans',sans-serif; font-size:12px; color:var(--muted); background:var(--bg); outline:none; appearance:none; -webkit-appearance:none; cursor:pointer; }
 
+/* ── TABLA HISTORIAL ── */
+.tabla-header { display:flex; flex-shrink:0; background:var(--surface2); border-bottom:2px solid var(--border); padding:0 8px; }
+.tabla-body { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 8px 16px; }
+.tabla-body::-webkit-scrollbar { width:4px; }
+.tabla-body::-webkit-scrollbar-thumb { background:#ddd; border-radius:4px; }
+.tcol { padding:8px 5px; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; overflow:hidden; white-space:nowrap; }
+.trow { display:flex; align-items:center; border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s; }
+.trow:active { background:rgba(204,34,34,0.04); }
+.trow .tcol { font-size:12px; font-weight:400; color:var(--text); text-transform:none; letter-spacing:0; padding:8px 5px; }
+.tcol-fecha  { flex:0 0 72px; }
+.tcol-obra   { flex:0 0 62px; overflow:hidden; text-overflow:ellipsis; }
+.tcol-cat    { flex:0 0 32px; }
+.tcol-señal  { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tcol-por    { flex:0 0 76px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tcol-crit   { flex:0 0 60px; }
+.tcol-estado { flex:0 0 76px; }
+
 /* ── ESTADO BADGES ── */
 .estado-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; }
 .estado-abierta  { background:rgba(185,28,28,0.1);  color:#B91C1C; }
@@ -579,8 +596,19 @@ body { font-family: 'DM Sans', sans-serif; }
   <!-- PANEL ESTADÍSTICAS -->
   <div class="scroll" id="panelStats"></div>
 
-  <!-- PANEL LISTADO -->
-  <div class="scroll hidden" id="panelList"></div>
+  <!-- PANEL LISTADO — tabla con header fijo -->
+  <div class="hidden" id="panelList" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;">
+    <div class="tabla-header" id="tablaHeader">
+      <div class="tcol tcol-fecha">Fecha</div>
+      <div class="tcol tcol-obra">Obra</div>
+      <div class="tcol tcol-cat">Categoría</div>
+      <div class="tcol tcol-señal">Señal / Descripción</div>
+      <div class="tcol tcol-por">Creado por</div>
+      <div class="tcol tcol-crit">Criticidad</div>
+      <div class="tcol tcol-estado">Estado</div>
+    </div>
+    <div class="tabla-body" id="tablaBody"></div>
+  </div>
 </div>
 
 <!-- MODAL DETALLE ALERTA -->
@@ -1103,7 +1131,7 @@ function switchHistTab(tab) {
   document.getElementById('tab-stats').classList.toggle('active', tab==='stats');
   document.getElementById('tab-list').classList.toggle('active', tab==='list');
   document.getElementById('panelStats').classList.toggle('hidden', tab!=='stats');
-  document.getElementById('panelList').classList.toggle('hidden', tab!=='list');
+  document.getElementById('panelList').style.display = tab==='list' ? 'flex' : 'none';
   document.getElementById('filterBar').classList.toggle('hidden', tab!=='list');
   if (tab==='stats') renderStats();
   else renderLista();
@@ -1111,6 +1139,9 @@ function switchHistTab(tab) {
 
 function renderHistorial() {
   poblarFiltros();
+  // asegurar estado visual correcto
+  document.getElementById('panelList').style.display = histTab==='list' ? 'flex' : 'none';
+  document.getElementById('filterBar').classList.toggle('hidden', histTab!=='list');
   if (histTab==='stats') renderStats();
   else renderLista();
 }
@@ -1154,41 +1185,30 @@ function alertasFiltradas() {
 }
 
 function renderLista() {
-  const cont = document.getElementById('panelList');
+  const body = document.getElementById('tablaBody');
   const lista = alertasFiltradas();
   if (!lista.length) {
-    cont.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div><div class="empty-text">Sin alertas con estos filtros</div></div>`;
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div><div class="empty-text">Sin alertas con estos filtros</div></div>`;
     return;
   }
-  cont.innerHTML = '';
+  body.innerHTML = '';
   lista.forEach(a => {
     const est = getEstado(a);
     const cfg = ESTADO_CFG[est];
-    const div = document.createElement('div');
-    div.className = 'hist-item';
-    div.onclick = () => abrirDetalle(a.id);
     const critCls = {Alta:'crit-alta', Media:'crit-media', Baja:'crit-baja'}[a.criticidad||'Media'] || 'crit-media';
-    div.innerHTML = `
-      <div class="hist-item-header">
-        <div class="hist-item-top">
-          <div style="flex:1;min-width:0">
-            <div class="hist-cat">${a.categoria} · ${a.categoriaNombre}</div>
-            <div class="hist-signal">${a.señal}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-            <span class="estado-badge ${cfg.cls}">${cfg.dot} ${cfg.label}</span>
-            <span class="crit-badge ${critCls}">${a.criticidad||'Media'}</span>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;margin-top:8px;">
-          <div class="hist-meta"><strong>Obra:</strong> ${a.obraNombre}</div>
-          <div class="hist-meta"><strong>Por:</strong> ${a.usuario}</div>
-          <div class="hist-meta"><strong>Fecha:</strong> ${a.fecha} ${a.hora}</div>
-        </div>
-        ${a.descripcion ? `<div class="hist-desc-preview" style="margin-top:5px">"${a.descripcion.slice(0,80)}${a.descripcion.length>80?'…':''}"</div>` : ''}
-        ${a.notaCierre  ? `<div class="hist-desc-preview" style="color:#047857;margin-top:3px">✓ ${a.notaCierre.slice(0,60)}${a.notaCierre.length>60?'…':''}</div>` : ''}
-      </div>`;
-    cont.appendChild(div);
+    const señalTexto = a.descripcion ? `${a.señal} — ${a.descripcion}` : a.señal;
+    const row = document.createElement('div');
+    row.className = 'trow';
+    row.onclick = () => abrirDetalle(a.id);
+    row.innerHTML = `
+      <div class="tcol tcol-fecha">${a.fecha}</div>
+      <div class="tcol tcol-obra" title="${a.obraNombre}">${a.obraNombre}</div>
+      <div class="tcol tcol-cat">${a.categoria}</div>
+      <div class="tcol tcol-señal" title="${señalTexto}">${señalTexto}</div>
+      <div class="tcol tcol-por" title="${a.usuario}">${a.usuario}</div>
+      <div class="tcol tcol-crit"><span class="crit-badge ${critCls}">${a.criticidad||'Media'}</span></div>
+      <div class="tcol tcol-estado"><span class="estado-badge ${cfg.cls}" style="font-size:10px;padding:2px 6px">${cfg.dot} ${cfg.label}</span></div>`;
+    body.appendChild(row);
   });
 }
 
