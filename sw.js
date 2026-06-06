@@ -1,4 +1,4 @@
-const CACHE = 'alertas-obra-v4';
+const CACHE = 'alertas-obra-v6';
 const ASSETS = [
   '/AlertasObra/',
   '/AlertasObra/index.html',
