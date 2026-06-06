@@ -95,7 +95,7 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
   font-family: 'DM Sans', sans-serif; white-space: nowrap; transition: background .15s;
 }
 .hbtn:hover { background: rgba(255,255,255,.25); }
-.hbtn.primary { background: rgba(255,255,255,.25); }
+.hbtn.primary { background: #fff; color: var(--red) !important; font-weight: 600; }
 .hdr-avatar {
   width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.2);
   display: flex; align-items: center; justify-content: center; font-size: 12px;
@@ -158,22 +158,22 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
 /* ── COL HEADER DESKTOP ── */
 .col-hdr {
   display: grid;
-  grid-template-columns: 6px 1fr 90px 100px 100px 80px;
+  grid-template-columns: 5px 2fr 130px 90px 100px 90px 110px 90px;
   padding: 6px 16px; background: #EAE6DF; border-bottom: 1px solid var(--border);
   font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase;
-  letter-spacing: .5px; position: sticky; top: 41px; z-index: 9;
+  letter-spacing: .5px; position: sticky; top: 41px; z-index: 9; white-space: nowrap;
 }
 
 /* ── ROWS ── */
 .trow {
   display: grid;
-  grid-template-columns: 6px 1fr 90px 100px 100px 80px;
-  padding: 10px 16px; border-bottom: 1px solid var(--border);
-  align-items: center; cursor: pointer; transition: background .1s; position: relative;
+  grid-template-columns: 5px 2fr 130px 90px 100px 90px 110px 90px;
+  padding: 8px 16px; border-bottom: 1px solid var(--border);
+  align-items: center; cursor: pointer; transition: background .1s; position: relative; min-height: 40px;
 }
 .trow:hover { background: var(--surface); }
 .trow .crit-bar { width: 4px; height: 100%; border-radius: 2px; margin-right: 0; }
-.ttitle { font-size: 13px; font-weight: 500; padding: 0 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ttitle { font-size: 13px; font-weight: 500; padding: 0 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .trow-sub { font-size: 11px; color: var(--text3); padding: 0 12px; }
 .tuser { font-size: 11px; color: var(--text2); }
 .tdate { font-size: 11px; color: var(--text2); font-family: 'DM Mono', monospace; }
@@ -437,10 +437,12 @@ select option { font-family: 'DM Sans', sans-serif; }
       <!-- COLUMN HEADERS DESKTOP -->
       <div class="col-hdr desk-only">
         <span></span>
-        <span>Descripción</span>
+        <span style="padding-left:12px">Descripción</span>
+        <span>Creado por</span>
+        <span>Fecha</span>
         <span>Obra</span>
-        <span>Tipo</span>
         <span>Criticidad</span>
+        <span>Categoría</span>
         <span>Estado</span>
       </div>
 
@@ -806,15 +808,15 @@ function render(){
     list.innerHTML = filtered.map(a=>{
       const color = critColor(a.criticidad);
       const sel = selectedId===a.id;
+      const nombre = a.creadoNombre || a.creadoPor?.split('@')[0] || '—';
       return `<div class="trow ${sel?'selected':''}" onclick="openDetail('${a.id}')" style="background:${sel?'var(--red-l)':''}">
-        <div style="width:4px;height:36px;border-radius:2px;background:${color}"></div>
-        <div>
-          <div class="ttitle">${esc(a.descripcion||'')}</div>
-          <div class="trow-sub">${esc(a.creadoPor?.split('@')[0]||'')} · ${fmtFecha(a.creadoEn)}</div>
-        </div>
+        <div style="width:4px;height:28px;border-radius:2px;background:${color};align-self:center"></div>
+        <div class="ttitle">${esc(a.descripcion||'')}</div>
+        <div class="tcol">${esc(nombre)}</div>
+        <div class="tcol" style="font-family:'DM Mono',monospace;font-size:11px">${fmtFecha(a.creadoEn)}</div>
         <div class="tcol">${esc(a.obra||'—')}</div>
-        <div class="tcol" style="font-size:11px">${esc(a.tipo||'—')}</div>
         <div>${critBadge(a.criticidad)}</div>
+        <div class="tcol" style="font-size:11px">${esc(a.tipo||'—')}</div>
         <div>${estadoBadge(a.estado)}</div>
       </div>`;
     }).join('');
@@ -1040,6 +1042,7 @@ window.saveAlert = async function(){
       await addDoc(collection(db, COLECCION), {
         descripcion: desc, obra, criticidad, tipo, estado,
         creadoPor: currentUser.email,
+        creadoNombre: currentUser.displayName || currentUser.email.split('@')[0],
         creadoEn: serverTimestamp()
       });
       showToast('✓ Alerta registrada');
