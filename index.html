@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#F5F6F8">
+<title>Alertas Obra</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root {
+  --bg: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface2: #EEF0F3;
+  --border: rgba(0,0,0,0.10);
+  --accent: #CC2222;
+  --accent2: #AA1111;
+  --text: #111318;
+  --muted: #6B7280;
+  --danger: #CC2222;
+  --success: #1D9E75;
+  --warning: #D97706;
+  --info: #2563EB;
+  --radius: 12px;
+  --radius-lg: 18px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: 'Georgia', serif; color: var(--text); }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+body { font-family: 'DM Sans', sans-serif; }
+
+/* ── SCREENS ── */
+.screen {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  bottom: calc(58px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  transition: transform .35s cubic-bezier(.4,0,.2,1), opacity .35s;
+  overflow: hidden;
+}
+.screen.hidden { transform: translateX(100%); opacity: 0; pointer-events: none; }
+.screen.slide-left { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+
+/* ── TOPBAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px 10px;
+  padding-top: calc(14px + env(safe-area-inset-top));
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+.topbar-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); letter-spacing: .3px; }
+.topbar-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.icon-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background .15s; }
+.icon-btn:active { background: var(--surface2); }
+.icon-btn svg { width: 18px; height: 18px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── OBRA SELECTOR ── */
+.obra-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.obra-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; flex-shrink: 0; }
+.obra-select {
+  flex: 1; background: transparent; border: none; color: var(--accent);
+  font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; outline: none; appearance: none; -webkit-appearance: none;
+}
+.obra-select option { background: #FFFFFF; color: var(--text); }
+.obra-chevron { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+
+/* ── SCROLL AREA ── */
+.scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 18px; }
+.scroll::-webkit-scrollbar { width: 4px; }
+.scroll::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+/* ── CATEGORY GRID ── */
+.cat-header { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 14px 14px;
+  cursor: pointer;
+  transition: background .15s, transform .1s, border-color .15s;
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 110px;
+}
+.cat-card:active { transform: scale(.97); background: var(--surface2); }
+.cat-card.selected { border-color: var(--accent); background: rgba(204,34,34,0.05); }
+.cat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.cat-icon svg { width: 20px; height: 20px; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cat-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.cat-count { font-size: 11px; color: var(--muted); }
+
+/* ── CATEGORY COLORS ── */
+.ic-c1 { background: rgba(37,99,235,0.10); } .ic-c1 svg { stroke: #2563EB; }
+.ic-c2 { background: rgba(204,34,34,0.10); } .ic-c2 svg { stroke: #CC2222; }
+.ic-c3 { background: rgba(5,150,105,0.10); } .ic-c3 svg { stroke: #059669; }
+.ic-c4 { background: rgba(109,40,217,0.10); } .ic-c4 svg { stroke: #6D28D9; }
+.ic-c5 { background: rgba(180,83,9,0.10); }  .ic-c5 svg { stroke: #B45309; }
+.ic-c6 { background: rgba(185,28,28,0.10); } .ic-c6 svg { stroke: #B91C1C; }
+.ic-c7 { background: rgba(4,120,87,0.10); }  .ic-c7 svg { stroke: #047857; }
+.ic-c8 { background: rgba(75,85,99,0.10); }  .ic-c8 svg { stroke: #4B5563; }
+.ic-c9 { background: rgba(217,119,6,0.10); } .ic-c9 svg { stroke: #D97706; }
+
+/* ── SIGNALS SCREEN ── */
+.back-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.back-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; padding: 6px 0; }
+.back-btn svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.selected-cat-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(204,34,34,0.08); border: 1px solid rgba(204,34,34,0.25);
+  border-radius: 20px; padding: 4px 12px 4px 8px; font-size: 12px; color: var(--accent2);
+}
+.signal-list { display: flex; flex-direction: column; gap: 8px; }
+.signal-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  transition: background .15s, border-color .15s;
+}
+.signal-item:active { background: var(--surface2); }
+.signal-item.selected { border-color: var(--accent); background: rgba(204,34,34,0.05); }
+.signal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.signal-text { font-size: 14px; color: var(--text); line-height: 1.4; flex: 1; }
+.signal-check { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.signal-item.selected .signal-check { background: var(--accent); border-color: var(--accent); }
+.signal-check svg { width: 11px; height: 11px; stroke: white; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transition: opacity .15s; }
+.signal-item.selected .signal-check svg { opacity: 1; }
+
+/* ── DESCRIPTION BOX ── */
+.desc-section { margin-top: 20px; }
+.desc-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+.desc-textarea {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 14px; padding: 12px 14px; resize: none; outline: none;
+  transition: border-color .15s; min-height: 90px;
+}
+.desc-textarea:focus { border-color: rgba(204,34,34,0.4); }
+.desc-textarea::placeholder { color: var(--muted); }
+.attach-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.attach-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px dashed var(--border);
+  border-radius: var(--radius); padding: 10px 14px;
+  font-size: 12px; color: var(--muted); cursor: not-allowed; opacity: .6;
+}
+.attach-btn svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.attach-soon { font-size: 10px; color: var(--muted); font-style: italic; }
+
+/* ── SUBMIT BUTTON ── */
+.submit-bar {
+  flex-shrink: 0;
+  padding: 10px 18px 12px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.submit-btn {
+  width: 100%; padding: 14px; border-radius: var(--radius-lg);
+  background: var(--accent); border: none; color: white;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: background .15s, transform .1s;
+  letter-spacing: .3px;
+}
+.submit-btn:active { background: #991111; transform: scale(.99); }
+.submit-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; transform: none; }
+
+/* hide bottom nav when keyboard is open */
+.keyboard-open .bottom-nav { display: none; }
+.keyboard-open .scroll { padding-bottom: 16px; }
+
+/* ── CONFIRM SCREEN ── */
+.confirm-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.confirm-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--border); gap: 16px; }
+.confirm-row:last-child { border-bottom: none; }
+.confirm-key { font-size: 12px; color: var(--muted); flex-shrink: 0; padding-top: 1px; }
+.confirm-val { font-size: 13px; color: var(--text); text-align: right; font-weight: 500; line-height: 1.4; }
+.success-icon { width: 60px; height: 60px; border-radius: 50%; background: rgba(5,150,105,0.12); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.success-icon svg { width: 30px; height: 30px; stroke: var(--success); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── FILTROS ── */
+.filter-bar { flex-shrink:0; border-bottom:1px solid var(--border); background:var(--surface); }
+.filter-scroll { display:flex; align-items:center; gap:6px; padding:8px 14px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.filter-scroll::-webkit-scrollbar { display:none; }
+.filter-chip { flex-shrink:0; padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:var(--bg); font-family:'DM Sans',sans-serif; font-size:12px; color:var(--muted); cursor:pointer; white-space:nowrap; transition:all .15s; }
+.filter-chip.active { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+.filter-divider { width:1px; height:20px; background:var(--border); flex-shrink:0; margin:0 2px; }
+.filter-select { flex-shrink:0; border:1px solid var(--border); border-radius:20px; padding:5px 10px; font-family:'DM Sans',sans-serif; font-size:12px; color:var(--muted); background:var(--bg); outline:none; appearance:none; -webkit-appearance:none; cursor:pointer; }
+
+/* ── ESTADO BADGES ── */
+.estado-badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; }
+.estado-abierta  { background:rgba(185,28,28,0.1);  color:#B91C1C; }
+.estado-gestion  { background:rgba(217,119,6,0.12); color:#B45309; }
+.estado-resuelta { background:rgba(5,150,105,0.1);  color:#047857; }
+
+/* ── HOME BADGE ── */
+.home-badge { display:flex; align-items:center; gap:6px; background:rgba(185,28,28,0.08); border:1px solid rgba(185,28,28,0.2); border-radius:12px; padding:6px 10px; cursor:pointer; }
+.home-badge-num { font-size:18px; font-weight:700; color:#B91C1C; line-height:1; }
+.home-badge-label { font-size:10px; color:#B91C1C; line-height:1.2; }
+
+/* ── HIST ITEM actualizado ── */
+.hist-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; overflow:hidden; cursor:pointer; transition:box-shadow .15s; }
+.hist-item:active { box-shadow:0 0 0 2px rgba(204,34,34,0.2); }
+.hist-item-header { padding:13px 14px 12px; }
+.hist-item-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; gap:8px; }
+.hist-cat { font-size:11px; color:var(--accent); font-weight:600; }
+.hist-time { font-size:10px; color:var(--muted); white-space:nowrap; }
+.hist-signal { font-size:13px; color:var(--text); margin-bottom:5px; line-height:1.4; font-weight:500; }
+.hist-meta { font-size:11px; color:var(--muted); }
+.hist-desc-preview { font-size:11px; color:var(--muted); font-style:italic; margin-top:3px; }
+
+/* ── DETALLE MODAL ── */
+.detalle-estado-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.detalle-field { margin-bottom:10px; }
+.detalle-key { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; margin-bottom:3px; }
+.detalle-val { font-size:14px; color:var(--text); line-height:1.4; }
+.detalle-divider { height:1px; background:var(--border); margin:14px 0; }
+.detalle-actions { display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+.action-btn-gestion { width:100%; padding:13px; border-radius:var(--radius); border:none; background:rgba(217,119,6,0.1); color:#B45309; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; }
+.action-btn-resolver { width:100%; padding:13px; border-radius:var(--radius); border:none; background:rgba(5,150,105,0.1); color:#047857; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; }
+.action-btn-reabrir { width:100%; padding:13px; border-radius:var(--radius); border:none; background:rgba(107,114,128,0.1); color:var(--muted); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; }
+.nota-cierre { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; padding:10px 12px; outline:none; resize:none; margin-bottom:8px; }
+.nota-cierre:focus { border-color:rgba(5,150,105,0.4); }
+.hist-tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+.hist-tab { flex:1; padding:11px; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; background:none; border:none; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; }
+.hist-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+/* ── STATS ── */
+.stat-total-card { background:var(--accent); border-radius:var(--radius-lg); padding:18px 20px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; }
+.stat-total-num { font-size:42px; font-weight:600; color:#fff; line-height:1; }
+.stat-total-label { font-size:13px; color:rgba(255,255,255,0.85); margin-top:3px; }
+.stat-total-right { text-align:right; }
+.stat-total-sub { font-size:12px; color:rgba(255,255,255,0.7); }
+.stats-section-title { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.9px; margin:18px 0 10px; }
+.stat-cat-row { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:6px; overflow:hidden; }
+.stat-cat-header { display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; }
+.stat-cat-header:active { background:var(--surface2); }
+.stat-cat-name { flex:1; font-size:13px; font-weight:500; color:var(--text); }
+.stat-cat-pill { background:var(--accent); color:#fff; font-size:11px; font-weight:600; padding:2px 9px; border-radius:10px; min-width:24px; text-align:center; }
+.stat-cat-chevron { width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s; flex-shrink:0; }
+.stat-cat-row.open .stat-cat-chevron { transform:rotate(180deg); }
+.stat-cat-body { display:none; border-top:1px solid var(--border); padding:4px 0; }
+.stat-cat-row.open .stat-cat-body { display:block; }
+.stat-signal-row { display:flex; justify-content:space-between; align-items:center; padding:8px 14px; gap:12px; }
+.stat-signal-row + .stat-signal-row { border-top:1px solid var(--border); }
+.stat-signal-name { font-size:12px; color:var(--muted); flex:1; line-height:1.4; }
+.stat-signal-count { font-size:12px; font-weight:600; color:var(--text); flex-shrink:0; }
+.stat-bar-wrap { background:var(--surface2); border-radius:4px; height:4px; margin:0 14px 10px; overflow:hidden; }
+.stat-bar-fill { height:100%; background:var(--accent); border-radius:4px; }
+.stat-month-row { display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:11px 14px; margin-bottom:6px; }
+.stat-month-name { font-size:13px; color:var(--text); font-weight:500; }
+.stat-month-count { font-size:13px; font-weight:600; color:var(--accent); }
+
+/* ── BAR CHART (horizontal) ── */
+.chart-wrap { margin-bottom:10px; }
+.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+.hbar-row { display:flex; align-items:center; gap:8px; cursor:pointer; padding:2px 0; }
+.hbar-row:active { opacity:.7; }
+.hbar-label { font-size:11px; color:var(--muted); width:52px; flex-shrink:0; text-transform:capitalize; }
+.hbar-track { flex:1; background:var(--surface2); border-radius:4px; height:16px; overflow:hidden; }
+.hbar-fill { height:100%; background:#CC2222; border-radius:4px; transition:width .4s ease; opacity:.85; }
+.hbar-val { font-size:11px; font-weight:700; color:#CC2222; width:20px; text-align:right; flex-shrink:0; }
+.chart-detail { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-top:8px; overflow:hidden; }
+.chart-det-header { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-bottom:1px solid var(--border); }
+.chart-det-title { font-size:13px; font-weight:600; color:var(--text); text-transform:capitalize; }
+.chart-det-row { display:flex; justify-content:space-between; align-items:center; padding:8px 14px; border-bottom:1px solid var(--border); }
+.chart-det-row:last-child { border-bottom:none; }
+.chart-det-cat { font-size:12px; color:var(--muted); flex:1; line-height:1.3; }
+.chart-det-n { font-size:12px; font-weight:600; color:var(--accent); margin-left:10px; }
+.cal-detail-close { background:none; border:none; cursor:pointer; color:var(--muted); display:flex; align-items:center; padding:4px; border-radius:6px; }
+.cal-detail-close:active { background:var(--surface2); }
+.stat-mini-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:4px; }
+.stat-mini-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 10px; text-align:center; }
+.stat-mini-num { font-size:22px; font-weight:600; color:var(--accent); line-height:1; }
+.stat-mini-label { font-size:10px; color:var(--muted); margin-top:4px; line-height:1.3; }
+
+/* ── HIST LIST ── */
+.hist-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; overflow:hidden; }
+.hist-item-header { padding:13px 14px 10px; }
+.hist-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; }
+.hist-cat { font-size:12px; color:var(--accent); font-weight:500; }
+.hist-time { font-size:11px; color:var(--muted); white-space:nowrap; margin-left:8px; }
+.hist-signal { font-size:13px; color:var(--text); margin-bottom:4px; line-height:1.4; }
+.hist-meta { font-size:11px; color:var(--muted); }
+.hist-desc-preview { font-size:11px; color:var(--muted); font-style:italic; margin-top:3px; }
+.hist-actions { display:flex; border-top:1px solid var(--border); }
+.hist-action-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; font-family:'DM Sans',sans-serif; font-size:12px; background:none; border:none; cursor:pointer; transition:background .15s; }
+.hist-action-btn:active { background:var(--surface2); }
+.hist-action-btn+.hist-action-btn { border-left:1px solid var(--border); }
+.hist-action-btn svg { width:14px; height:14px; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.hist-action-edit { color:var(--info); } .hist-action-edit svg { stroke:var(--info); }
+.hist-action-del { color:#B91C1C; } .hist-action-del svg { stroke:#B91C1C; }
+.empty-state { text-align:center; padding:60px 20px; }
+.empty-icon { width:56px; height:56px; margin:0 auto 16px; opacity:.3; }
+.empty-icon svg { width:56px; height:56px; stroke:var(--muted); fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.empty-text { color:var(--muted); font-size:14px; }
+
+/* ── MODAL ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:200; display:flex; align-items:flex-end; justify-content:center; }
+.modal-overlay.hidden { display:none; }
+.modal-card { background:var(--surface); border-radius:var(--radius-lg) var(--radius-lg) 0 0; padding:24px 20px; padding-bottom:calc(24px + env(safe-area-inset-bottom)); width:100%; max-width:520px; max-height:88vh; overflow-y:auto; }
+.modal-title { font-family:'DM Serif Display',serif; font-size:18px; color:var(--text); margin-bottom:16px; }
+
+/* ── CONFIG SCREEN ── */
+.config-section { margin-bottom: 24px; }
+.config-section-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.config-field { margin-bottom: 10px; }
+.config-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+.config-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 14px; padding: 11px 14px; outline: none; transition: border-color .15s;
+}
+.config-input:focus { border-color: rgba(204,34,34,0.4); }
+.config-select {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 14px; padding: 11px 14px; outline: none; appearance: none;
+  -webkit-appearance: none; cursor: pointer;
+}
+.config-select option { background: #FFFFFF; }
+.save-btn {
+  width: 100%; padding: 14px; border-radius: var(--radius);
+  background: var(--accent); border: none; color: white;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background .15s; margin-top: 6px;
+}
+.save-btn:active { background: #991111; }
+.export-btn {
+  width: 100%; padding: 12px; border-radius: var(--radius);
+  background: transparent; border: 1px solid var(--border); color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background .15s;
+}
+.export-btn:active { background: var(--surface2); }
+.export-btn svg { width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 10px 20px; font-size: 13px; color: var(--text);
+  opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; white-space: nowrap;
+  z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── BOTTOMNAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(58px + env(safe-area-inset-bottom));
+  display: flex; background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 50;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 4px 8px; cursor: pointer; transition: color .15s;
+  background: none; border: none; color: var(--muted); font-family: 'DM Sans', sans-serif;
+}
+.nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.nav-btn span { font-size: 10px; letter-spacing: .3px; }
+.nav-btn.active { color: var(--accent); }
+.nav-btn.active svg { stroke-width: 2.2; }
+
+/* scroll areas only need small bottom padding — screen already ends above nav */
+.scroll { padding-bottom: 16px; }
+
+/* ── SETUP OVERLAY ── */
+.setup-overlay {
+  position: fixed; inset: 0; background: #FFFFFF;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 30px; z-index: 100; transition: opacity .3s;
+}
+.setup-overlay.done { opacity: 0; pointer-events: none; }
+.setup-logo { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--text); margin-bottom: 6px; }
+.setup-sub { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
+.setup-form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 12px; }
+.setup-title { font-size: 14px; color: var(--muted); margin-bottom: 4px; text-align: center; }
+
+/* ── NUEVA ALERTA NAV BTN ── */
+.nav-btn-nueva { flex: 1.4; }
+.nav-nueva-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: #fff; border: 1.5px solid #CC2222; border-radius: 12px;
+  padding: 6px 12px; margin: 4px 4px 2px;
+}
+.nav-btn-nueva span { font-size: 10px; color: #CC2222; font-weight: 600; letter-spacing: .2px; }
+.nav-btn-nueva:active .nav-nueva-inner { background: rgba(204,34,34,0.06); }
+
+/* ── CRITICIDAD ── */
+.crit-row { display:flex; gap:6px; margin-bottom:10px; }
+.crit-btn { flex:1; padding:8px 4px; border-radius:8px; border:1.5px solid var(--border); background:var(--bg); font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; cursor:pointer; text-align:center; transition:all .15s; color:var(--muted); }
+.crit-btn.active-alta   { background:#FEE2E2; border-color:#B91C1C; color:#B91C1C; }
+.crit-btn.active-media  { background:#FEF3C7; border-color:#D97706; color:#D97706; }
+.crit-btn.active-baja   { background:#D1FAE5; border-color:#059669; color:#059669; }
+.crit-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; margin-bottom:6px; }
+
+/* ── CRITICIDAD BADGES ── */
+.crit-badge { display:inline-block; font-size:10px; font-weight:600; padding:2px 7px; border-radius:8px; }
+.crit-alta  { background:#FEE2E2; color:#B91C1C; }
+.crit-media { background:#FEF3C7; color:#B45309; }
+.crit-baja  { background:#D1FAE5; color:#047857; }
+.section-divider { height: 1px; background: var(--border); margin: 16px 0; }
+.badge { display: inline-block; background: rgba(224,123,58,0.15); color: var(--accent2); font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- SETUP OVERLAY (first run) -->
+<div class="setup-overlay" id="setupOverlay">
+  <div class="setup-logo">🏗 Alertas Obra</div>
+  <div class="setup-sub">Sistema de alertas tempranas</div>
+  <div class="setup-form">
+    <div class="setup-title">¿Quién eres?</div>
+    <input class="config-input" id="setupNombre" placeholder="Tu nombre completo" type="text" autocomplete="name">
+    <input class="config-input" id="setupRol" placeholder="Tu rol (ej: Jefe de Obra)" type="text">
+    <select class="config-select" id="setupObra">
+      <option value="">— Selecciona tu obra habitual —</option>
+    </select>
+    <button class="save-btn" onclick="guardarSetup()">Ingresar →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- SCREEN 1: HOME (categorías)        -->
+<!-- ═══════════════════════════════════ -->
+<div class="screen" id="screenHome">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Alertas Obra</div>
+      <div class="topbar-sub" id="topbarUser">—</div>
+    </div>
+    <div id="homeBadgeWrap"></div>
+  </div>
+
+  <div class="obra-bar">
+    <span class="obra-label">Obra</span>
+    <select class="obra-select" id="obraSelector" onchange="cambiarObra(this.value)"></select>
+    <svg class="obra-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+
+  <div class="scroll">
+    <div class="cat-header">Selecciona una categoría de alerta</div>
+    <div class="cat-grid" id="catGrid"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- SCREEN 2: SEÑALES                  -->
+<!-- ═══════════════════════════════════ -->
+<div class="screen hidden" id="screenSignals">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Nueva Alerta</div>
+      <div class="topbar-sub" id="signalObraLabel">—</div>
+    </div>
+  </div>
+
+  <div class="scroll" id="signalsScroll">
+    <div class="back-row">
+      <div class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Categorías
+      </div>
+      <div class="selected-cat-badge" id="selCatBadge">—</div>
+    </div>
+
+    <div class="signal-list" id="signalList"></div>
+  </div>
+
+  <div class="submit-bar">
+    <div class="crit-label">Criticidad</div>
+    <div class="crit-row">
+      <button class="crit-btn" id="crit-alta"  onclick="setCriticidad('Alta')">🔴 Alta</button>
+      <button class="crit-btn" id="crit-media" onclick="setCriticidad('Media')">🟡 Media</button>
+      <button class="crit-btn" id="crit-baja"  onclick="setCriticidad('Baja')">🟢 Baja</button>
+    </div>
+    <textarea class="desc-textarea" id="descTextarea" placeholder="Descripción adicional (opcional)..." rows="2"></textarea>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin: 8px 0 10px;">
+      <div class="attach-btn">
+        <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        Adjuntar
+      </div>
+      <span class="attach-soon">próximamente</span>
+    </div>
+    <button class="submit-btn" id="submitBtn" onclick="confirmarAlerta()" disabled>Registrar alerta</button>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- SCREEN 3: CONFIRMACIÓN             -->
+<!-- ═══════════════════════════════════ -->
+<div class="screen hidden" id="screenConfirm">
+  <div class="topbar">
+    <div><div class="topbar-title">Alerta registrada</div></div>
+  </div>
+  <div class="scroll">
+    <div style="text-align:center;margin:30px 0 24px;">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:6px;">Alerta enviada</div>
+      <div style="font-size:13px;color:var(--muted);">Quedó guardada en el registro local</div>
+    </div>
+
+    <div class="confirm-card" id="confirmCard"></div>
+
+    <button class="submit-btn" onclick="nuevaAlerta()" style="margin-top:14px;">Nueva alerta</button>
+    <button class="export-btn" onclick="showScreen('screenHistory')" style="margin-top:10px;">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Ver historial
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- SCREEN 4: HISTORIAL                -->
+<!-- ═══════════════════════════════════ -->
+<div class="screen hidden" id="screenHistory">
+  <div class="topbar">
+    <div><div class="topbar-title">Historial</div></div>
+    <div style="display:flex;gap:6px;">
+      <div class="icon-btn" onclick="exportarExcel()" title="Exportar Excel">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;stroke:var(--muted)"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      </div>
+      <div class="icon-btn" onclick="exportarJSON()" title="Exportar JSON">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;stroke:var(--muted)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="hist-tabs">
+    <button class="hist-tab active" id="tab-stats" onclick="switchHistTab('stats')">Resumen</button>
+    <button class="hist-tab" id="tab-list" onclick="switchHistTab('list')">Registros</button>
+  </div>
+
+  <!-- FILTROS (solo en tab lista) -->
+  <div class="filter-bar hidden" id="filterBar">
+    <div class="filter-scroll">
+      <button class="filter-chip active" data-filter="estado" data-val="" onclick="setFilter('estado','',this)">Todas</button>
+      <button class="filter-chip" data-filter="estado" data-val="abierta" onclick="setFilter('estado','abierta',this)">🔴 Abiertas</button>
+      <button class="filter-chip" data-filter="estado" data-val="gestion" onclick="setFilter('estado','gestion',this)">🟡 En gestión</button>
+      <button class="filter-chip" data-filter="estado" data-val="resuelta" onclick="setFilter('estado','resuelta',this)">✅ Resueltas</button>
+      <div class="filter-divider"></div>
+      <select class="filter-select" id="filterObra" onchange="setFilter('obra',this.value)">
+        <option value="">Todas las obras</option>
+      </select>
+      <select class="filter-select" id="filterCat" onchange="setFilter('cat',this.value)">
+        <option value="">Todas las categorías</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- PANEL ESTADÍSTICAS -->
+  <div class="scroll" id="panelStats"></div>
+
+  <!-- PANEL LISTADO -->
+  <div class="scroll hidden" id="panelList"></div>
+</div>
+
+<!-- MODAL DETALLE ALERTA -->
+<div class="modal-overlay hidden" id="detalleModal">
+  <div class="modal-card" id="detalleCard"></div>
+</div>
+
+<!-- MODAL EDITAR ALERTA -->
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal-card">
+    <div class="modal-title">Editar alerta</div>
+
+    <div class="config-label" style="margin-bottom:5px;">Categoría</div>
+    <select class="config-select" id="editCat" onchange="editCatChange()"></select>
+
+    <div class="config-label" style="margin:12px 0 5px;">Señal</div>
+    <select class="config-select" id="editSignal"></select>
+
+    <div class="config-label" style="margin:12px 0 5px;">Obra</div>
+    <select class="config-select" id="editObra"></select>
+
+    <div class="config-label" style="margin:12px 0 5px;">Descripción</div>
+    <textarea class="desc-textarea" id="editDesc" rows="3" placeholder="Descripción adicional…"></textarea>
+
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="export-btn" onclick="cerrarModal()" style="flex:1;">Cancelar</button>
+      <button class="save-btn" onclick="guardarEdicion()" style="flex:1;">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR ELIMINAR -->
+<div class="modal-overlay hidden" id="deleteModal">
+  <div class="modal-card" style="text-align:center;">
+    <div style="width:48px;height:48px;border-radius:50%;background:rgba(185,28,28,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#B91C1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </div>
+    <div class="modal-title">¿Eliminar alerta?</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;" id="deleteDesc">Esta acción no se puede deshacer.</div>
+    <div style="display:flex;gap:8px;">
+      <button class="export-btn" onclick="cerrarModal()" style="flex:1;">Cancelar</button>
+      <button class="save-btn" onclick="confirmarEliminar()" style="flex:1;background:#B91C1C;">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- SCREEN 5: CONFIG                   -->
+<!-- ═══════════════════════════════════ -->
+<div class="screen hidden" id="screenConfig">
+  <div class="topbar">
+    <div><div class="topbar-title">Configuración</div></div>
+    <div class="icon-btn" onclick="showScreen('screenHome')">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="config-section">
+      <div class="config-section-title">Perfil de usuario</div>
+      <div class="config-field">
+        <div class="config-label">Nombre</div>
+        <input class="config-input" id="cfgNombre" type="text" placeholder="Tu nombre">
+      </div>
+      <div class="config-field">
+        <div class="config-label">Rol / Cargo</div>
+        <input class="config-input" id="cfgRol" type="text" placeholder="Ej: Jefe de Obra">
+      </div>
+      <div class="config-field">
+        <div class="config-label">Obra habitual</div>
+        <select class="config-select" id="cfgObra"></select>
+      </div>
+      <button class="save-btn" onclick="guardarConfig()">Guardar cambios</button>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="config-section">
+      <div class="config-section-title">Datos</div>
+      <button class="export-btn" onclick="exportarJSON()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar base de datos (JSON)
+      </button>
+      <button class="export-btn" onclick="exportarExcel()" style="margin-top:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        Exportar como Excel (.csv)
+      </button>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;">
+        Descarga todas las alertas registradas en este dispositivo.
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="config-section">
+      <div class="config-section-title">Importar datos</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;">
+        Importa alertas desde un archivo JSON exportado anteriormente, o desde un CSV compatible.
+      </div>
+      <label class="export-btn" style="cursor:pointer;justify-content:center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:var(--muted)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Importar archivo (JSON o CSV)</span>
+        <input type="file" id="importFile" accept=".json,.csv" style="display:none" onchange="importarArchivo(this)">
+      </label>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5;">
+        Los registros importados se <strong>agregan</strong> a los existentes. No se eliminan datos actuales.
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="config-section">
+      <div class="config-section-title" style="color:#B91C1C;">Zona de peligro</div>
+      <button class="export-btn" onclick="abrirBorrarTodo()" style="border-color:rgba(185,28,28,0.3);color:#B91C1C;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;stroke:#B91C1C"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Borrar todo el registro
+      </button>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Esta acción elimina todas las alertas permanentemente.</div>
+    </div>
+
+    <div class="section-divider"></div>
+    <div style="font-size:11px;color:var(--muted);text-align:center;padding:10px 0;">
+      Alertas Obra v1.0 — Etapa 1<br>
+      Datos guardados localmente en este dispositivo
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BORRAR TODO -->
+<div class="modal-overlay hidden" id="clearAllModal">
+  <div class="modal-card" style="text-align:center;">
+    <div style="width:52px;height:52px;border-radius:50%;background:rgba(185,28,28,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#B91C1C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </div>
+    <div class="modal-title">¿Borrar todo el registro?</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Se eliminarán <strong id="clearAllCount">0</strong> alertas permanentemente.<br>Esta acción no se puede deshacer.</div>
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Escribe <strong>BORRAR</strong> para confirmar:</div>
+      <input class="config-input" id="clearAllInput" type="text" placeholder="BORRAR" oninput="checkClearInput()">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="export-btn" onclick="cerrarClearAll()" style="flex:1;">Cancelar</button>
+      <button class="save-btn" id="clearAllBtn" onclick="ejecutarBorrarTodo()" style="flex:1;background:#B91C1C;" disabled>Borrar todo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESULTADO IMPORTACIÓN -->
+<div class="modal-overlay hidden" id="importResultModal">
+  <div class="modal-card">
+    <div class="modal-title" id="importResultTitle">Importación completada</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;" id="importResultBody"></div>
+    <button class="save-btn" onclick="cerrarImportResult()">Aceptar</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-btn active" id="nav-home" onclick="navTo('screenHome')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Inicio</span>
+  </button>
+  <button class="nav-btn nav-btn-nueva" id="nav-nueva" onclick="navTo('screenHome')">
+    <div class="nav-nueva-inner">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#CC2222" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Nueva alerta</span>
+    </div>
+  </button>
+  <button class="nav-btn" id="nav-history" onclick="navTo('screenHistory')">
+    <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+    <span>Historial</span>
+  </button>
+  <button class="nav-btn" id="nav-config" onclick="navTo('screenConfig')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span>Ajustes</span>
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATOS ──────────────────────────────────────────────────
+const OBRAS = [
+  { id:'obra1', nombre:'Obra 1' },
+  { id:'obra2', nombre:'Obra 2' },
+  { id:'obra3', nombre:'Obra 3' },
+  { id:'obra4', nombre:'Obra 4' },
+  { id:'obra5', nombre:'Obra 5' },
+];
+
+const CATEGORIAS = [
+  {
+    id:'C1', nombre:'Personas',
+    sub:'7 señales', clase:'ic-c1',
+    icon:`<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    señales:[
+      'Alta rotación de trabajadores y/o supervisión',
+      'Problema de liderazgo o habilidades blandas',
+      'Bajo compromiso o mal clima laboral',
+      'Supervisores no revisan',
+      'Mala calidad subcontratista o falta de MO',
+      'Poca coordinación entre especialidades',
+      'Obra está lejos, no llega gente',
+    ]
+  },
+  {
+    id:'C2', nombre:'Ejecución',
+    sub:'6 señales', clase:'ic-c2',
+    icon:`<svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+    señales:[
+      'Falla de equipo crítico (grúa, excavadora, generador, etc.)',
+      'Mal rendimiento o ejecución subcontratista',
+      'Reproceso por error',
+      'Uso de productos nuevos sin pruebas previas',
+      'Mala planificación de trabajos o error',
+      'Orden y limpieza deficiente',
+    ]
+  },
+  {
+    id:'C3', nombre:'Abastecimiento',
+    sub:'4 señales', clase:'ic-c3',
+    icon:`<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`,
+    señales:[
+      'Falta de materiales o quiebre de stock',
+      'Bodega desordenada — sin control de stock ni inventario',
+      'Alza de precios materiales',
+      'Provisión de materiales comprometida con proveedores sin contrato formal',
+    ]
+  },
+  {
+    id:'C4', nombre:'Proyecto',
+    sub:'5 señales', clase:'ic-c4',
+    icon:`<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+    señales:[
+      'Errores de proyecto o falta de coordinación',
+      'RDI o definiciones de proyecto sin respuesta oportuna',
+      'Actualizaciones o cambios de proyecto que no bajan a obra',
+      'Cambios de normativa que derivan en rediseño de planos sin aviso previo',
+      'Conflicto entre estandarización interna y requerimientos del proyecto nuevo',
+    ]
+  },
+  {
+    id:'C5', nombre:'Inmobiliaria',
+    sub:'6 señales', clase:'ic-c5',
+    icon:`<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="16" x2="12" y2="16"/></svg>`,
+    señales:[
+      'Inicio de obra sin contrato o con definiciones contractuales incompletas',
+      'Sin acuerdo en criterios de recepción o en presentación de adicionales',
+      'Partidas no consideradas en presupuesto',
+      'Precio y/o plazo muy apretado desde el inicio',
+      'Objetivos propios no alineados con la empresa',
+      'Cambio de ITO sin inducción ni traspaso formal',
+    ]
+  },
+  {
+    id:'C6', nombre:'Seguridad',
+    sub:'5 señales', clase:'ic-c6',
+    icon:`<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    señales:[
+      'Casi-accidentes o condiciones de alto potencial sin reporte ni registro',
+      'Fiscalización de organismo externo (SMA, Inspección, Mutual, DOM)',
+      'Riesgo de paralización por accidente, reclamo o demanda',
+      'Normativa local no conocida o no considerada (DIA, DIMA, DOM)',
+      'Mal liderazgo en seguridad',
+    ]
+  },
+  {
+    id:'C7', nombre:'Entorno y comunidad',
+    sub:'4 señales', clase:'ic-c7',
+    icon:`<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    señales:[
+      'Reclamos, conflictos o entorno adverso con vecinos u organismos (DOM, SMA, municipio)',
+      'Ruido, restricciones horarias o multas por incumplimiento de normativa comunal',
+      'Terreno o logística compleja — accesos, espacio, obras paralelas, camiones',
+      '[INICIO DE OBRA] Obra colindante a proyecto anterior propio — consultar historial Post Venta por vecinos disconformes',
+    ]
+  },
+  {
+    id:'C8', nombre:'Gestión',
+    sub:'8 señales', clase:'ic-c8',
+    icon:`<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    señales:[
+      'Comunicación deficiente entre Oficina y Obra — materiales, control, definiciones',
+      'Problemas que se repiten sin corrección — ausencia de aprendizaje organizacional',
+      'Presupuesto no contempla complejidad de la obra',
+      'Gastos corriendo sin producción que los respalde — obra en espera o en inicio sin fecha confirmada',
+      'Estado de pago listo o vencido pero no presentado — retraso de cobro sin justificación',
+      'Avance físico no cuadra con lo facturado',
+      'Extras ejecutados que no se han acordado',
+      'ITO no valida avance para cobrarlo',
+    ]
+  },
+];
+
+// ── ESTADO ────────────────────────────────────────────────
+let currentScreen = 'screenHome';
+let prevScreen = 'screenHome';
+let selectedCat = null;
+let selectedSignal = null;
+let alertas = [];
+let usuario = { nombre: '', rol: '', obraFav: 'obra1' };
+let obraActual = 'obra1';
+
+// ── INIT ──────────────────────────────────────────────────
+function init() {
+  cargarDatos();
+  poblarObras();
+  renderCategorias();
+
+  if (usuario.nombre) {
+    document.getElementById('setupOverlay').classList.add('done');
+    actualizarTopbar();
+    actualizarHomeBadge();
+  }
+}
+
+function cargarDatos() {
+  try {
+    const u = localStorage.getItem('ao_usuario');
+    if (u) usuario = JSON.parse(u);
+    const a = localStorage.getItem('ao_alertas');
+    if (a) alertas = JSON.parse(a);
+    obraActual = usuario.obraFav || 'obra1';
+  } catch(e) {}
+}
+
+function guardarDatos() {
+  localStorage.setItem('ao_usuario', JSON.stringify(usuario));
+  localStorage.setItem('ao_alertas', JSON.stringify(alertas));
+}
+
+function poblarObras() {
+  ['obraSelector','setupObra','cfgObra'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '';
+    if (id === 'setupObra') {
+      const opt = document.createElement('option');
+      opt.value = ''; opt.textContent = '— Obra habitual —';
+      sel.appendChild(opt);
+    }
+    OBRAS.forEach(o => {
+      const opt = document.createElement('option');
+      opt.value = o.id; opt.textContent = o.nombre;
+      sel.appendChild(opt);
+    });
+    sel.value = obraActual;
+  });
+}
+
+function actualizarTopbar() {
+  const obraName = OBRAS.find(o=>o.id===obraActual)?.nombre || '';
+  document.getElementById('topbarUser').textContent =
+    `${usuario.nombre || 'Usuario'}${usuario.rol ? ' · ' + usuario.rol : ''}`;
+  document.getElementById('signalObraLabel').textContent = obraName;
+  document.getElementById('obraSelector').value = obraActual;
+}
+
+function cambiarObra(val) {
+  obraActual = val;
+  guardarDatos();
+  actualizarTopbar();
+}
+
+// ── SETUP ────────────────────────────────────────────────
+function guardarSetup() {
+  const n = document.getElementById('setupNombre').value.trim();
+  const r = document.getElementById('setupRol').value.trim();
+  const o = document.getElementById('setupObra').value;
+  if (!n) { toast('Ingresa tu nombre'); return; }
+  usuario = { nombre: n, rol: r, obraFav: o || 'obra1' };
+  obraActual = usuario.obraFav;
+  guardarDatos();
+  document.getElementById('setupOverlay').classList.add('done');
+  actualizarTopbar();
+  poblarObras();
+}
+
+// ── CATEGORÍAS ────────────────────────────────────────────
+function renderCategorias() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = '';
+  CATEGORIAS.forEach(cat => {
+    const div = document.createElement('div');
+    div.className = 'cat-card';
+    div.innerHTML = `
+      <div class="cat-icon ${cat.clase}">${cat.icon}</div>
+      <div class="cat-name">${cat.nombre}</div>
+      <div class="cat-count">${cat.sub}</div>`;
+    div.onclick = () => seleccionarCategoria(cat);
+    grid.appendChild(div);
+  });
+}
+
+function seleccionarCategoria(cat) {
+  selectedCat = cat;
+  selectedSignal = null;
+
+  document.getElementById('selCatBadge').textContent = cat.id + ' · ' + cat.nombre;
+  document.getElementById('signalObraLabel').textContent =
+    OBRAS.find(o=>o.id===obraActual)?.nombre || '';
+
+  const list = document.getElementById('signalList');
+  list.innerHTML = '';
+  cat.señales.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'signal-item';
+    div.id = 'sig_' + i;
+    div.innerHTML = `
+      <div class="signal-dot" style="background:var(--accent)"></div>
+      <div class="signal-text">${s}</div>
+      <div class="signal-check">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>`;
+    div.onclick = () => seleccionarSeñal(i, s, div);
+    list.appendChild(div);
+  });
+
+  document.getElementById('descTextarea').value = '';
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('signalsScroll').scrollTop = 0;
+  showScreen('screenSignals');
+}
+
+function seleccionarSeñal(idx, texto, el) {
+  document.querySelectorAll('.signal-item').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSignal = texto;
+  document.getElementById('submitBtn').disabled = false;
+}
+
+// ── REGISTRAR ALERTA ─────────────────────────────────────
+function confirmarAlerta() {
+  if (!selectedSignal) return;
+
+  const desc = document.getElementById('descTextarea').value.trim();
+  const ahora = new Date();
+  const obraName = OBRAS.find(o=>o.id===obraActual)?.nombre || obraActual;
+
+  const alerta = {
+    id: Date.now(),
+    ts: ahora.toISOString(),
+    fecha: ahora.toLocaleDateString('es-CL', {day:'2-digit',month:'2-digit',year:'numeric'}),
+    hora: ahora.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'}),
+    usuario: usuario.nombre || 'Usuario',
+    rol: usuario.rol || '',
+    obra: obraActual,
+    obraNombre: obraName,
+    categoria: selectedCat.id,
+    categoriaNombre: selectedCat.nombre,
+    señal: selectedSignal,
+    descripcion: desc,
+    criticidad: selectedCriticidad || 'Media',
+    estado: 'abierta',
+  };
+
+  alertas.unshift(alerta);
+  guardarDatos();
+  actualizarHomeBadge();
+  mostrarConfirmacion(alerta);
+}
+
+function mostrarConfirmacion(a) {
+  const card = document.getElementById('confirmCard');
+  card.innerHTML = `
+    <div class="confirm-row"><span class="confirm-key">Categoría</span><span class="confirm-val">${a.categoria} · ${a.categoriaNombre}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Señal</span><span class="confirm-val">${a.señal}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Obra</span><span class="confirm-val">${a.obraNombre}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Registrado por</span><span class="confirm-val">${a.usuario}${a.rol ? '<br><span style="font-weight:400;color:var(--muted);font-size:12px;">'+a.rol+'</span>' : ''}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Fecha y hora</span><span class="confirm-val">${a.fecha} · ${a.hora}</span></div>
+    ${a.descripcion ? `<div class="confirm-row"><span class="confirm-key">Descripción</span><span class="confirm-val" style="font-weight:400">${a.descripcion}</span></div>` : ''}
+  `;
+  showScreen('screenConfirm');
+}
+
+function nuevaAlerta() {
+  selectedCat = null;
+  selectedSignal = null;
+  resetCriticidad();
+  showScreen('screenHome');
+}
+
+let selectedCriticidad = '';
+
+function setCriticidad(val) {
+  selectedCriticidad = val;
+  ['alta','media','baja'].forEach(c => {
+    const btn = document.getElementById('crit-'+c);
+    btn.className = 'crit-btn';
+    if (val.toLowerCase() === c) btn.classList.add('active-'+c);
+  });
+}
+
+function resetCriticidad() {
+  selectedCriticidad = '';
+  ['alta','media','baja'].forEach(c => {
+    document.getElementById('crit-'+c).className = 'crit-btn';
+  });
+}
+
+function goBack() {
+  showScreen('screenHome');
+}
+let histTab = 'stats';
+let editingId = null;
+let deletingId = null;
+let detalleId = null;
+let filtros = { estado: '', obra: '', cat: '' };
+
+const ESTADO_CFG = {
+  abierta:  { label:'Abierta',     cls:'estado-abierta',  dot:'🔴' },
+  gestion:  { label:'En gestión',  cls:'estado-gestion',  dot:'🟡' },
+  resuelta: { label:'Resuelta',    cls:'estado-resuelta', dot:'✅' },
+};
+
+function getEstado(a) { return a.estado || 'abierta'; }
+
+function switchHistTab(tab) {
+  histTab = tab;
+  document.getElementById('tab-stats').classList.toggle('active', tab==='stats');
+  document.getElementById('tab-list').classList.toggle('active', tab==='list');
+  document.getElementById('panelStats').classList.toggle('hidden', tab!=='stats');
+  document.getElementById('panelList').classList.toggle('hidden', tab!=='list');
+  document.getElementById('filterBar').classList.toggle('hidden', tab!=='list');
+  if (tab==='stats') renderStats();
+  else renderLista();
+}
+
+function renderHistorial() {
+  poblarFiltros();
+  if (histTab==='stats') renderStats();
+  else renderLista();
+}
+
+function poblarFiltros() {
+  const selObra = document.getElementById('filterObra');
+  const selCat  = document.getElementById('filterCat');
+  if (!selObra) return;
+  selObra.innerHTML = '<option value="">Todas las obras</option>';
+  OBRAS.forEach(o => {
+    const op = document.createElement('option');
+    op.value = o.id; op.textContent = o.nombre;
+    selObra.appendChild(op);
+  });
+  selObra.value = filtros.obra;
+  selCat.innerHTML = '<option value="">Todas las categorías</option>';
+  CATEGORIAS.forEach(c => {
+    const op = document.createElement('option');
+    op.value = c.id; op.textContent = c.id + ' · ' + c.nombre;
+    selCat.appendChild(op);
+  });
+  selCat.value = filtros.cat;
+}
+
+function setFilter(tipo, val, el) {
+  filtros[tipo] = val;
+  if (tipo === 'estado' && el) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+  renderLista();
+}
+
+function alertasFiltradas() {
+  return alertas.filter(a => {
+    if (filtros.estado && getEstado(a) !== filtros.estado) return false;
+    if (filtros.obra   && a.obra !== filtros.obra) return false;
+    if (filtros.cat    && a.categoria !== filtros.cat) return false;
+    return true;
+  });
+}
+
+function renderLista() {
+  const cont = document.getElementById('panelList');
+  const lista = alertasFiltradas();
+  if (!lista.length) {
+    cont.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div><div class="empty-text">Sin alertas con estos filtros</div></div>`;
+    return;
+  }
+  cont.innerHTML = '';
+  lista.forEach(a => {
+    const est = getEstado(a);
+    const cfg = ESTADO_CFG[est];
+    const div = document.createElement('div');
+    div.className = 'hist-item';
+    div.onclick = () => abrirDetalle(a.id);
+    const critCls = {Alta:'crit-alta', Media:'crit-media', Baja:'crit-baja'}[a.criticidad||'Media'] || 'crit-media';
+    div.innerHTML = `
+      <div class="hist-item-header">
+        <div class="hist-item-top">
+          <div style="flex:1;min-width:0">
+            <div class="hist-cat">${a.categoria} · ${a.categoriaNombre}</div>
+            <div class="hist-signal">${a.señal}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+            <span class="estado-badge ${cfg.cls}">${cfg.dot} ${cfg.label}</span>
+            <span class="crit-badge ${critCls}">${a.criticidad||'Media'}</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;margin-top:8px;">
+          <div class="hist-meta"><strong>Obra:</strong> ${a.obraNombre}</div>
+          <div class="hist-meta"><strong>Por:</strong> ${a.usuario}</div>
+          <div class="hist-meta"><strong>Fecha:</strong> ${a.fecha} ${a.hora}</div>
+        </div>
+        ${a.descripcion ? `<div class="hist-desc-preview" style="margin-top:5px">"${a.descripcion.slice(0,80)}${a.descripcion.length>80?'…':''}"</div>` : ''}
+        ${a.notaCierre  ? `<div class="hist-desc-preview" style="color:#047857;margin-top:3px">✓ ${a.notaCierre.slice(0,60)}${a.notaCierre.length>60?'…':''}</div>` : ''}
+      </div>`;
+    cont.appendChild(div);
+  });
+}
+
+// ── DETALLE Y CICLO DE VIDA ───────────────────────────────
+function abrirDetalle(id) {
+  const idNum = Number(id);
+  const a = alertas.find(x => x.id === idNum);
+  if (!a) return;
+  detalleId = idNum;
+  renderDetalleModal(a);
+  document.getElementById('detalleModal').classList.remove('hidden');
+}
+
+function renderDetalleModal(a) {
+  const est = getEstado(a);
+  const cfg = ESTADO_CFG[est];
+  const critCls = {Alta:'crit-alta', Media:'crit-media', Baja:'crit-baja'}[a.criticidad||'Media'] || 'crit-media';
+  const card = document.getElementById('detalleCard');
+  const accionesHTML = est === 'abierta' ? `
+    <div class="detalle-divider"></div>
+    <div class="detalle-key">¿Qué quieres hacer?</div>
+    <div class="detalle-actions">
+      <button class="action-btn-gestion" onclick="cambiarEstado(${a.id},'gestion')">🟡 Marcar en gestión</button>
+      <textarea class="nota-cierre" id="notaCierreInput" placeholder="Nota de cierre: qué se hizo, quién lo resolvió…" rows="2"></textarea>
+      <button class="action-btn-resolver" onclick="cambiarEstadoConNota(${a.id},'resuelta')">✅ Marcar como resuelta</button>
+    </div>` :
+  est === 'gestion' ? `
+    <div class="detalle-divider"></div>
+    <div class="detalle-key">¿Qué quieres hacer?</div>
+    <div class="detalle-actions">
+      <textarea class="nota-cierre" id="notaCierreInput" placeholder="Nota de cierre: qué se hizo, quién lo resolvió…" rows="2"></textarea>
+      <button class="action-btn-resolver" onclick="cambiarEstadoConNota(${a.id},'resuelta')">✅ Marcar como resuelta</button>
+      <button class="action-btn-reabrir" onclick="cambiarEstado(${a.id},'abierta')">🔴 Volver a abrir</button>
+    </div>` :
+  `<div class="detalle-divider"></div>
+    <div class="detalle-actions">
+      <button class="action-btn-reabrir" onclick="cambiarEstado(${a.id},'abierta')">🔴 Reabrir alerta</button>
+    </div>`;
+
+  card.innerHTML = `
+    <div class="detalle-estado-bar">
+      <div class="modal-title" style="margin-bottom:0">${a.categoria} · ${a.categoriaNombre}</div>
+      <span class="estado-badge ${cfg.cls}">${cfg.dot} ${cfg.label}</span>
+    </div>
+    <div class="detalle-field"><div class="detalle-key">Señal</div><div class="detalle-val">${a.señal}</div></div>
+    <div class="detalle-field"><div class="detalle-key">Criticidad</div><div class="detalle-val"><span class="crit-badge ${critCls}">${a.criticidad||'Media'}</span></div></div>
+    <div class="detalle-field"><div class="detalle-key">Obra</div><div class="detalle-val">${a.obraNombre}</div></div>
+    <div class="detalle-field"><div class="detalle-key">Registrado por</div><div class="detalle-val">${a.usuario}${a.rol?' · '+a.rol:''}</div></div>
+    <div class="detalle-field"><div class="detalle-key">Fecha</div><div class="detalle-val">${a.fecha} ${a.hora}</div></div>
+    ${a.descripcion ? `<div class="detalle-field"><div class="detalle-key">Descripción</div><div class="detalle-val">${a.descripcion}</div></div>` : ''}
+    ${a.notaCierre  ? `<div class="detalle-field"><div class="detalle-key">Nota de cierre</div><div class="detalle-val" style="color:#047857">${a.notaCierre}</div></div>` : ''}
+    ${a.fechaCierre ? `<div class="detalle-field"><div class="detalle-key">Cerrada</div><div class="detalle-val">${a.fechaCierre} · ${a.cerradaPor||''}</div></div>` : ''}
+    ${accionesHTML}
+    <div class="detalle-divider"></div>
+    <div style="display:flex;gap:8px;">
+      <button class="export-btn" onclick="cerrarDetalle()" style="flex:1;">Cerrar</button>
+      <button class="export-btn" onclick="cerrarDetalle();abrirEdicion(${a.id})" style="flex:1;color:var(--info);border-color:var(--info);">Editar</button>
+      <button class="export-btn" onclick="cerrarDetalle();abrirEliminar(${a.id})" style="flex:1;color:#B91C1C;border-color:#B91C1C;">Eliminar</button>
+    </div>`;
+}
+
+function cambiarEstado(id, nuevoEstado) {
+  const idNum = Number(id);
+  const idx = alertas.findIndex(x => x.id === idNum);
+  if (idx < 0) return;
+  alertas[idx].estado = nuevoEstado;
+  if (nuevoEstado === 'abierta') { delete alertas[idx].notaCierre; delete alertas[idx].fechaCierre; delete alertas[idx].cerradaPor; }
+  guardarDatos();
+  cerrarDetalle();
+  renderLista();
+  actualizarHomeBadge();
+  toast(nuevoEstado === 'gestion' ? '🟡 Marcada en gestión' : '🔴 Alerta reabierta');
+}
+
+function cambiarEstadoConNota(id, nuevoEstado) {
+  const idNum = Number(id);
+  const idx = alertas.findIndex(x => x.id === idNum);
+  if (idx < 0) return;
+  const nota = document.getElementById('notaCierreInput')?.value.trim() || '';
+  alertas[idx].estado = nuevoEstado;
+  alertas[idx].notaCierre = nota;
+  alertas[idx].fechaCierre = new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});
+  alertas[idx].cerradaPor = usuario.nombre || 'Usuario';
+  guardarDatos();
+  cerrarDetalle();
+  renderLista();
+  actualizarHomeBadge();
+  toast('✅ Alerta marcada como resuelta');
+}
+
+function cerrarDetalle() {
+  document.getElementById('detalleModal').classList.add('hidden');
+  detalleId = null;
+}
+
+// ── BADGE HOME ────────────────────────────────────────────
+function actualizarHomeBadge() {
+  const wrap = document.getElementById('homeBadgeWrap');
+  if (!wrap) return;
+  const total = alertas.filter(a => getEstado(a) !== 'resuelta').length;
+  if (!total) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <div class="home-badge" onclick="navTo('screenHistory')">
+      <div class="home-badge-num">${total}</div>
+      <div class="home-badge-label">pendiente${total!==1?'s':''}</div>
+    </div>`;
+}
+  const cont = document.getElementById('panelStats');
+  if (!alertas.length) {
+    cont.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="empty-text">Sin alertas registradas aún</div></div>`;
+    return;
+  }
+
+  // totales globales
+  const total = alertas.length;
+  const obras = [...new Set(alertas.map(a=>a.obraNombre))].length;
+  const cats  = [...new Set(alertas.map(a=>a.categoria))].length;
+
+  // por categoría
+  const byCat = {};
+  CATEGORIAS.forEach(c => { byCat[c.id] = { nombre:c.nombre, total:0, señales:{} }; });
+  alertas.forEach(a => {
+    if (!byCat[a.categoria]) return;
+    byCat[a.categoria].total++;
+    byCat[a.categoria].señales[a.señal] = (byCat[a.categoria].señales[a.señal]||0)+1;
+  });
+  const maxCat = Math.max(...Object.values(byCat).map(c=>c.total), 1);
+
+  // por mes
+  const byMonth = {};
+  alertas.forEach(a => {
+    const d = new Date(a.ts);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label = d.toLocaleDateString('es-CL',{month:'long',year:'numeric'});
+    if (!byMonth[key]) byMonth[key] = { label, count:0 };
+    byMonth[key].count++;
+  });
+  const meses = Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0]));
+
+  let html = `
+  <div class="stat-total-card">
+    <div>
+      <div class="stat-total-num">${total}</div>
+      <div class="stat-total-label">Alertas registradas</div>
+    </div>
+    <div class="stat-total-right">
+      <div class="stat-total-sub">${cats} categoría${cats!==1?'s':''} activa${cats!==1?'s':''}</div>
+      <div class="stat-total-sub" style="margin-top:3px">${obras} obra${obras!==1?'s':''}</div>
+    </div>
+  </div>
+
+  <div class="stat-mini-grid">
+    ${meses.length ? `<div class="stat-mini-card"><div class="stat-mini-num">${meses[0][1].count}</div><div class="stat-mini-label">este mes</div></div>` : ''}
+    <div class="stat-mini-card"><div class="stat-mini-num">${Object.values(byCat).filter(c=>c.total>0).length}</div><div class="stat-mini-label">tipos usados</div></div>
+    <div class="stat-mini-card"><div class="stat-mini-num">${meses.length}</div><div class="stat-mini-label">mese${meses.length!==1?'s':''} con alertas</div></div>
+  </div>
+
+  <div class="stats-section-title">Por categoría</div>`;
+
+  CATEGORIAS.forEach(c => {
+    const d = byCat[c.id];
+    if (!d || d.total===0) return;
+    const pct = Math.round((d.total/maxCat)*100);
+    const señalesHtml = Object.entries(d.señales)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([s,n])=>`<div class="stat-signal-row"><span class="stat-signal-name">${s}</span><span class="stat-signal-count">${n}</span></div>`)
+      .join('');
+    html += `
+    <div class="stat-cat-row" id="scat-${c.id}">
+      <div class="stat-cat-header" onclick="toggleStatCat('${c.id}')">
+        <span class="stat-cat-name">${c.id} · ${c.nombre}</span>
+        <span class="stat-cat-pill">${d.total}</span>
+        <svg class="stat-cat-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
+      <div class="stat-cat-body">${señalesHtml}</div>
+    </div>`;
+  });
+
+  html += `<div class="stats-section-title">Alertas por mes</div>
+  <div class="chart-wrap" id="chartWrap"></div>`;
+
+  cont.innerHTML = html;
+  renderBarChart(meses);
+}
+
+// ── GRÁFICO DE BARRAS ─────────────────────────────────────
+function renderBarChart(meses) {
+  const wrap = document.getElementById('chartWrap');
+  if (!wrap) return;
+  if (!meses.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:20px;font-size:13px;color:var(--muted)">Sin datos por mes</div>';
+    return;
+  }
+
+  // last 8 months, oldest→newest
+  const data = meses.slice(0, 8).reverse();
+  const maxVal = Math.max(...data.map(([,m])=>m.count), 1);
+
+  const rows = data.map(([key, m]) => {
+    const pct = Math.round((m.count / maxVal) * 100);
+    const label = new Date(key + '-02').toLocaleDateString('es-CL', {month:'short', year:'2-digit'})
+      .replace('.','').replace(' ',''/'');
+    const monthStr = new Date(key + '-02').toLocaleDateString('es-CL', {month:'short'}).replace('.','');
+    const yrStr    = key.slice(2,4);
+    return `
+      <div class="hbar-row" onclick="chartBarClick('${key}')">
+        <div class="hbar-label">${monthStr} '${yrStr}</div>
+        <div class="hbar-track">
+          <div class="hbar-fill" style="width:${Math.max(pct,3)}%"></div>
+        </div>
+        <div class="hbar-val">${m.count}</div>
+      </div>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="chart-card">${rows}</div>
+    <div class="chart-detail hidden" id="chartDetail"></div>`;
+}
+
+function chartBarClick(key) {
+  const det = document.getElementById('chartDetail');
+  if (!det) return;
+  const [yr, mo] = key.split('-').map(Number);
+  const barAlerts = alertas.filter(a => {
+    const d = new Date(a.ts);
+    return d.getFullYear()===yr && (d.getMonth()+1)===mo;
+  });
+  const label = new Date(yr, mo-1, 1).toLocaleDateString('es-CL',{month:'long',year:'numeric'});
+
+  // group by cat
+  const byCat = {};
+  barAlerts.forEach(a => {
+    if (!byCat[a.categoria]) byCat[a.categoria] = { nombre:a.categoriaNombre, count:0 };
+    byCat[a.categoria].count++;
+  });
+  const catRows = Object.entries(byCat)
+    .sort((a,b)=>b[1].count-a[1].count)
+    .map(([id,d])=>`<div class="chart-det-row"><span class="chart-det-cat">${id} · ${d.nombre}</span><span class="chart-det-n">${d.count}</span></div>`)
+    .join('');
+
+  det.innerHTML = `
+    <div class="chart-det-header">
+      <span class="chart-det-title" style="text-transform:capitalize">${label} — ${barAlerts.length} alerta${barAlerts.length!==1?'s':''}</span>
+      <button class="cal-detail-close" onclick="document.getElementById('chartDetail').classList.add('hidden')">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    ${catRows}`;
+  det.classList.remove('hidden');
+}
+
+function toggleStatCat(id) {
+  document.getElementById('scat-'+id)?.classList.toggle('open');
+}
+
+// ── EDICIÓN ───────────────────────────────────────────────
+function abrirEdicion(id) {
+  const idNum = Number(id);
+  const a = alertas.find(x=>x.id===idNum);
+  if (!a) return;
+  editingId = idNum;
+
+  // poblar select categoría
+  const selCat = document.getElementById('editCat');
+  selCat.innerHTML = '';
+  CATEGORIAS.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.id + ' · ' + c.nombre;
+    selCat.appendChild(o);
+  });
+  selCat.value = a.categoria;
+  editCatChange(a.señal);
+
+  // poblar obra
+  const selObra = document.getElementById('editObra');
+  selObra.innerHTML = '';
+  OBRAS.forEach(o => {
+    const op = document.createElement('option');
+    op.value = o.id; op.textContent = o.nombre;
+    selObra.appendChild(op);
+  });
+  selObra.value = a.obra;
+
+  document.getElementById('editDesc').value = a.descripcion || '';
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+function editCatChange(preselect) {
+  const catId = document.getElementById('editCat').value;
+  const cat = CATEGORIAS.find(c=>c.id===catId);
+  const sel = document.getElementById('editSignal');
+  sel.innerHTML = '';
+  (cat?.señales||[]).forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+  if (preselect) sel.value = preselect;
+}
+
+function guardarEdicion() {
+  const idx = alertas.findIndex(x=>x.id===editingId);
+  if (idx<0) return;
+  const catId = document.getElementById('editCat').value;
+  const cat = CATEGORIAS.find(c=>c.id===catId);
+  const obraId = document.getElementById('editObra').value;
+  const obra = OBRAS.find(o=>o.id===obraId);
+  alertas[idx].categoria = catId;
+  alertas[idx].categoriaNombre = cat?.nombre||catId;
+  alertas[idx].señal = document.getElementById('editSignal').value;
+  alertas[idx].obra = obraId;
+  alertas[idx].obraNombre = obra?.nombre||obraId;
+  alertas[idx].descripcion = document.getElementById('editDesc').value.trim();
+  guardarDatos();
+  cerrarModal();
+  renderLista();
+  toast('Alerta actualizada ✓');
+}
+
+// ── ELIMINAR ──────────────────────────────────────────────
+function abrirEliminar(id) {
+  const idNum = Number(id);
+  const a = alertas.find(x=>x.id===idNum);
+  if (!a) return;
+  deletingId = idNum;
+  document.getElementById('deleteDesc').textContent = `"${a.señal}" — ${a.fecha}`;
+  document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function confirmarEliminar() {
+  alertas = alertas.filter(x=>x.id !== deletingId);
+  guardarDatos();
+  cerrarModal();
+  renderLista();
+  renderStats();
+  toast('Alerta eliminada');
+}
+
+function cerrarModal() {
+  document.getElementById('editModal').classList.add('hidden');
+  document.getElementById('deleteModal').classList.add('hidden');
+  editingId = null; deletingId = null;
+}
+
+// ── CONFIG ────────────────────────────────────────────────
+function cargarConfig() {
+  document.getElementById('cfgNombre').value = usuario.nombre || '';
+  document.getElementById('cfgRol').value = usuario.rol || '';
+  document.getElementById('cfgObra').value = usuario.obraFav || 'obra1';
+}
+
+function guardarConfig() {
+  usuario.nombre = document.getElementById('cfgNombre').value.trim();
+  usuario.rol = document.getElementById('cfgRol').value.trim();
+  usuario.obraFav = document.getElementById('cfgObra').value;
+  guardarDatos();
+  actualizarTopbar();
+  toast('Cambios guardados ✓');
+}
+
+// ── EXPORT ────────────────────────────────────────────────
+function exportarJSON() {
+  if (!alertas.length) { toast('No hay alertas para exportar'); return; }
+  const data = { exportado: new Date().toISOString(), version: '1.0', total: alertas.length, alertas };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `alertas_obra_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Exportando JSON…');
+}
+
+function exportarExcel() {
+  if (!alertas.length) { toast('No hay alertas para exportar'); return; }
+  const cols = ['ID','Fecha','Hora','Usuario','Rol','Obra','Categoría ID','Categoría','Señal','Descripción'];
+  const escape = v => {
+    const s = String(v ?? '').replace(/"/g,'""');
+    return /[,"\n]/.test(s) ? `"${s}"` : s;
+  };
+  const rows = alertas.map(a => [
+    a.id, a.fecha, a.hora, a.usuario, a.rol, a.obraNombre,
+    a.categoria, a.categoriaNombre, a.señal, a.descripcion||''
+  ].map(escape).join(','));
+  // BOM for Excel to detect UTF-8
+  const csv = '\uFEFF' + cols.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `alertas_obra_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Exportando Excel (CSV)…');
+}
+
+// ── BORRAR TODO ───────────────────────────────────────────
+function abrirBorrarTodo() {
+  document.getElementById('clearAllCount').textContent = alertas.length;
+  document.getElementById('clearAllInput').value = '';
+  document.getElementById('clearAllBtn').disabled = true;
+  document.getElementById('clearAllModal').classList.remove('hidden');
+}
+
+function checkClearInput() {
+  const val = document.getElementById('clearAllInput').value.trim().toUpperCase();
+  document.getElementById('clearAllBtn').disabled = (val !== 'BORRAR');
+}
+
+function ejecutarBorrarTodo() {
+  alertas = [];
+  guardarDatos();
+  cerrarClearAll();
+  toast('Registro limpiado');
+}
+
+function cerrarClearAll() {
+  document.getElementById('clearAllModal').classList.add('hidden');
+  document.getElementById('clearAllInput').value = '';
+  document.getElementById('clearAllBtn').disabled = true;
+}
+
+// ── IMPORTAR ──────────────────────────────────────────────
+function importarArchivo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      if (ext === 'json') importarJSON(e.target.result);
+      else if (ext === 'csv') importarCSV(e.target.result);
+      else mostrarResultadoImport(false, 'Formato no reconocido. Usa .json o .csv');
+    } catch(err) {
+      mostrarResultadoImport(false, 'Error al leer el archivo: ' + err.message);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  input.value = ''; // reset para permitir reimportar mismo archivo
+}
+
+function importarJSON(text) {
+  const data = JSON.parse(text);
+  // acepta tanto { alertas: [...] } como un array directo
+  const arr = Array.isArray(data) ? data : (data.alertas || []);
+  if (!arr.length) { mostrarResultadoImport(false, 'El archivo JSON no contiene alertas.'); return; }
+
+  const idsExistentes = new Set(alertas.map(a => a.id));
+  let nuevas = 0, duplicadas = 0;
+  arr.forEach(a => {
+    if (!a.id || !a.señal || !a.categoria) return; // registro inválido
+    if (idsExistentes.has(a.id)) { duplicadas++; return; }
+    alertas.push(a);
+    idsExistentes.add(a.id);
+    nuevas++;
+  });
+  // ordenar por timestamp desc
+  alertas.sort((a,b) => new Date(b.ts) - new Date(a.ts));
+  guardarDatos();
+  mostrarResultadoImport(true,
+    `Se importaron <strong>${nuevas}</strong> alerta${nuevas!==1?'s':''} nuevas.` +
+    (duplicadas ? `<br>${duplicadas} ya existían y fueron omitidas.` : '')
+  );
+}
+
+function importarCSV(text) {
+  // strip BOM if present
+  const clean = text.replace(/^\uFEFF/, '');
+  const lines = clean.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { mostrarResultadoImport(false, 'El CSV está vacío o no tiene datos.'); return; }
+
+  const header = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
+  // map column indices
+  const col = name => header.indexOf(name);
+  const iId    = col('id');
+  const iFecha = col('fecha');
+  const iHora  = col('hora');
+  const iUser  = col('usuario');
+  const iRol   = col('rol');
+  const iObra  = col('obra');  // obraNombre
+  const iCatId = col('categoría id');
+  const iCat   = col('categoría');
+  const iSeñal = col('señal');
+  const iDesc  = col('descripción');
+
+  if (iSeñal === -1 || iCatId === -1) {
+    mostrarResultadoImport(false, 'El CSV no tiene las columnas esperadas.<br>Asegúrate de importar un archivo exportado desde esta app.');
+    return;
+  }
+
+  const idsExistentes = new Set(alertas.map(a => String(a.id)));
+  let nuevas = 0, duplicadas = 0, invalidas = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCsvLine(lines[i]);
+    const idRaw = iId >= 0 ? cols[iId] : String(Date.now() + i);
+    if (!cols[iSeñal]) { invalidas++; continue; }
+    if (idsExistentes.has(idRaw)) { duplicadas++; continue; }
+
+    const obraName = iObra >= 0 ? cols[iObra] : '';
+    // try to match obra id from name
+    const obraObj = OBRAS.find(o => o.nombre === obraName);
+
+    alertas.push({
+      id: isNaN(Number(idRaw)) ? idRaw : Number(idRaw),
+      ts: new Date().toISOString(),
+      fecha: iFecha >= 0 ? cols[iFecha] : new Date().toLocaleDateString('es-CL'),
+      hora:  iHora  >= 0 ? cols[iHora]  : '',
+      usuario: iUser >= 0 ? cols[iUser] : 'Importado',
+      rol:   iRol   >= 0 ? cols[iRol]  : '',
+      obra:  obraObj ? obraObj.id : 'obra1',
+      obraNombre: obraName || 'Desconocida',
+      categoria: iCatId >= 0 ? cols[iCatId] : '',
+      categoriaNombre: iCat >= 0 ? cols[iCat] : '',
+      señal: cols[iSeñal],
+      descripcion: iDesc >= 0 ? cols[iDesc] : '',
+    });
+    idsExistentes.add(idRaw);
+    nuevas++;
+  }
+
+  alertas.sort((a,b) => new Date(b.ts) - new Date(a.ts));
+  guardarDatos();
+  mostrarResultadoImport(true,
+    `Se importaron <strong>${nuevas}</strong> alerta${nuevas!==1?'s':''} nuevas.` +
+    (duplicadas ? `<br>${duplicadas} ya existían y fueron omitidas.` : '') +
+    (invalidas  ? `<br>${invalidas} filas inválidas fueron ignoradas.` : '')
+  );
+}
+
+function parseCsvLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      result.push(cur); cur = '';
+    } else cur += ch;
+  }
+  result.push(cur);
+  return result;
+}
+
+function mostrarResultadoImport(ok, msg) {
+  document.getElementById('importResultTitle').textContent = ok ? 'Importación completada' : 'Error al importar';
+  document.getElementById('importResultBody').innerHTML = msg;
+  document.getElementById('importResultModal').classList.remove('hidden');
+  if (ok) renderHistorial();
+}
+
+function cerrarImportResult() {
+  document.getElementById('importResultModal').classList.add('hidden');
+}
+
+// ── NAVEGACIÓN ────────────────────────────────────────────
+const NAV_MAP = {
+  screenHome:    'nav-home',
+  screenSignals: 'nav-nueva',
+  screenConfirm: 'nav-home',
+  screenHistory: 'nav-history',
+  screenConfig:  'nav-config',
+};
+
+function navTo(id) {
+  showScreen(id);
+}
+
+function updateNav(id) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const target = NAV_MAP[id];
+  if (target) document.getElementById(target)?.classList.add('active');
+}
+
+function showScreen(id) {
+  if (id === 'screenHistory') renderHistorial();
+  if (id === 'screenConfig') { cargarConfig(); poblarObras(); }
+
+  const prev = document.getElementById(currentScreen);
+  const next = document.getElementById(id);
+
+  prev.classList.add('slide-left');
+  prev.classList.remove('hidden');
+  next.classList.remove('hidden');
+  next.classList.remove('slide-left');
+
+  setTimeout(() => { prev.classList.add('hidden'); prev.classList.remove('slide-left'); }, 370);
+
+  prevScreen = currentScreen;
+  currentScreen = id;
+  updateNav(id);
+}
+
+// ── TOAST ────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── TECLADO VIRTUAL ───────────────────────────────────────
+// Oculta el bottom nav cuando el teclado sube para no tapar el botón
+if (window.visualViewport) {
+  let initialHeight = window.visualViewport.height;
+  window.visualViewport.addEventListener('resize', () => {
+    const keyboardOpen = window.visualViewport.height < initialHeight * 0.85;
+    document.body.classList.toggle('keyboard-open', keyboardOpen);
+    // scroll el botón a la vista si está en pantalla de señales
+    if (keyboardOpen && currentScreen === 'screenSignals') {
+      setTimeout(() => {
+        document.getElementById('submitBtn')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 100);
+    }
+  });
+}
+
+// ── SERVICE WORKER ────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/AlertasObra/sw.js').catch(() => {});
+  });
+}
+
+// ── START ────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
