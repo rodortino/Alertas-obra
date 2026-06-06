@@ -24,7 +24,7 @@
   --est-resuelta-bg:#EAF3DE;  --est-resuelta-fg:#3B6D11;
   --est-descartada-bg:#EEECEA;--est-descartada-fg:#6B6963;
   /* GRID — col-hdr y trow comparten esta variable */
-  --tgrid: 5px 1.2fr 110px 76px 80px 78px 110px 76px 28px;
+  --tgrid: 16px 5px 1.2fr 110px 76px 80px 78px 110px 76px 24px 16px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);font-size:14px;}
@@ -89,7 +89,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 .col-hdr{
   display:grid;
   grid-template-columns:var(--tgrid);
-  padding:5px 16px;
+  padding:5px 0;
   background:#EAE6DF;
   border-bottom:1px solid var(--border);
   font-size:10px;font-weight:600;color:var(--text2);
@@ -98,13 +98,12 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
   white-space:nowrap;
   align-items:center;
 }
-.col-hdr>span{padding:0 4px;overflow:hidden;text-overflow:ellipsis;}
-.col-hdr>span:first-child{padding:0;}
+.col-hdr>span{padding:0 4px;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 
 .trow{
   display:grid;
   grid-template-columns:var(--tgrid);
-  padding:0 16px;
+  padding:0;
   border-bottom:1px solid var(--border);
   align-items:center;
   cursor:pointer;
@@ -115,11 +114,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 .trow.sel{background:var(--red-l);}
 
 /* Celdas de tabla */
-.tc{padding:0 4px;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tc-desc{padding:0 4px 0 10px;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tc-mono{padding:0 4px;font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;white-space:nowrap;}
-.tc-badge{padding:0 4px;display:flex;align-items:center;}
-.tc-icon{padding:0 4px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.tc{padding:0 4px;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.tc-desc{padding:0 4px 0 8px;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.tc-mono{padding:0 4px;font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;white-space:nowrap;min-width:0;}
+.tc-badge{padding:0 4px;display:flex;align-items:center;min-width:0;}
+.tc-icon{padding:0 2px;display:flex;align-items:center;justify-content:center;font-size:13px;}
 
 /* BADGES */
 .badge{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;border:1px solid transparent;}
@@ -325,6 +324,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
       <!-- HEADERS — mismo grid que trow via var(--tgrid) -->
       <div class="col-hdr desk-only">
         <span></span>
+        <span></span>
         <span>Descripción</span>
         <span>Creado por</span>
         <span>Fecha</span>
@@ -332,6 +332,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
         <span>Criticidad</span>
         <span>Categoría</span>
         <span>Estado</span>
+        <span></span>
         <span></span>
       </div>
 
@@ -611,7 +612,8 @@ function render(){
       const sel=selectedId===a.id;
       const tieneAdj=a.adjuntos&&a.adjuntos.length>0;
       return `<div class="trow${sel?' sel':''}" onclick="openDetail('${a.id}')">
-        <div style="width:4px;height:24px;border-radius:2px;background:${color}"></div>
+        <div></div>
+        <div style="width:4px;height:24px;border-radius:2px;background:${color};align-self:center"></div>
         <div class="tc-desc">${esc(a.descripcion||'')}</div>
         <div class="tc">${esc(nombreVisible(a))}</div>
         <div class="tc-mono">${fmtFecha(a.creadoEn)}</div>
@@ -620,6 +622,7 @@ function render(){
         <div class="tc" style="font-size:11px">${esc(a.tipo||'—')}</div>
         <div class="tc-badge">${estadoBadge(a.estado)}</div>
         <div class="tc-icon" title="${tieneAdj?a.adjuntos.length+' adjunto(s)':''}">${tieneAdj?'📎':''}</div>
+        <div></div>
       </div>`;
     }).join('');
   }
