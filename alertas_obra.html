@@ -86,7 +86,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 
 /* TABLA */
 /* ── TABLA ── */
-.alert-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+.alert-table{width:100%;border-collapse:collapse;table-layout:auto;}
 .alert-table thead{position:sticky;top:41px;z-index:9;}
 .alert-table thead tr{background:#EAE6DF;}
 .alert-table th{
@@ -633,13 +633,13 @@ function render(){
     list.innerHTML = `<table class="alert-table">
       <colgroup>
         <col style="width:22px">
-        <col style="min-width:120px">
-        <col style="width:128px">
+        <col>
+        <col style="width:116px">
+        <col style="width:82px">
+        <col style="width:72px">
         <col style="width:84px">
-        <col style="width:76px">
-        <col style="width:90px">
-        <col style="width:136px">
-        <col style="width:88px">
+        <col style="width:128px">
+        <col style="width:80px">
       </colgroup>
       <thead><tr>
         <th style="width:22px;padding-left:14px"></th>
