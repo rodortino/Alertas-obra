@@ -64,7 +64,22 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 .layout{display:flex;flex:1;overflow:hidden;}
 
 /* SIDEBAR */
-.sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:10px 0;display:flex;flex-direction:column;}
+.sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:0;display:flex;flex-direction:column;}
+/* Tarjetas resumen */
+.sb-summary{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 10px 8px;border-bottom:1px solid var(--border);}
+.sum-card{background:var(--white);border-radius:7px;padding:8px 10px;border:1px solid var(--border);cursor:pointer;transition:all .15s;text-align:center;}
+.sum-card:hover{border-color:var(--text3);transform:translateY(-1px);}
+.sum-card.active-card{border-color:currentColor;}
+.sum-card-num{font-size:22px;font-weight:700;line-height:1;margin-bottom:2px;}
+.sum-card-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;opacity:.75;}
+.sum-critica .sum-card-num{color:var(--crit-critica-fg);}
+.sum-critica{border-color:var(--crit-critica-bd)!important;}
+.sum-alta .sum-card-num{color:var(--crit-alta-fg);}
+.sum-alta{border-color:var(--crit-alta-bd)!important;}
+.sum-media .sum-card-num{color:var(--crit-media-fg);}
+.sum-media{border-color:var(--crit-media-bd)!important;}
+.sum-baja .sum-card-num{color:var(--crit-baja-fg);}
+.sum-baja{border-color:var(--crit-baja-bd)!important;}
 /* sb-section reemplazado por fblock-btn */
 .fblock{border-bottom:1px solid var(--border);}
 .fblock-btn{
@@ -89,6 +104,14 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 .fopt.active .fcnt{color:var(--red);}
 .clear-filters-btn{margin:6px 10px;padding:6px;background:none;border:1px solid var(--border);border-radius:5px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;width:calc(100% - 20px);}
 .clear-filters-btn:hover{background:var(--red-l);color:var(--red);border-color:var(--red);}
+.date-filter-body{padding:8px 12px 10px;display:none;}
+.date-filter-body.open{display:block;}
+.date-row{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;}
+.date-row label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);}
+.date-input{border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);background:var(--cream);outline:none;width:100%;cursor:pointer;}
+.date-input:focus{border-color:var(--red);}
+.date-clear{font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;text-align:left;}
+.date-clear:hover{color:var(--red);}
 
 /* CONTENT */
 .content{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;}
@@ -291,13 +314,48 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
   <div class="layout">
     <!-- SIDEBAR -->
     <div class="sidebar desk-only">
-      <!-- Estado -->
+      <!-- Resumen alertas activas por criticidad -->
+      <div class="sb-summary">
+        <div class="sum-card sum-critica" id="sum-critica" onclick="sbFilter('criticidad','Crítica',null)" title="Alertas Activas Críticas">
+          <div class="sum-card-num" id="sum-n-critica">0</div>
+          <div class="sum-card-lbl">Crítica</div>
+        </div>
+        <div class="sum-card sum-alta" id="sum-alta" onclick="sbFilter('criticidad','Alta',null)" title="Alertas Activas Altas">
+          <div class="sum-card-num" id="sum-n-alta">0</div>
+          <div class="sum-card-lbl">Alta</div>
+        </div>
+        <div class="sum-card sum-media" id="sum-media" onclick="sbFilter('criticidad','Media',null)" title="Alertas Activas Medias">
+          <div class="sum-card-num" id="sum-n-media">0</div>
+          <div class="sum-card-lbl">Media</div>
+        </div>
+        <div class="sum-card sum-baja" id="sum-baja" onclick="sbFilter('criticidad','Baja',null)" title="Alertas Activas Bajas">
+          <div class="sum-card-num" id="sum-n-baja">0</div>
+          <div class="sum-card-lbl">Baja</div>
+        </div>
+      </div>
+      <!-- 1. Criticidad -->
+      <div class="fblock" id="fb-criticidad">
+        <button class="fblock-btn" onclick="toggleFblock('fb-criticidad')">
+          <span>Criticidad</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-criticidad"></span>
+            <span class="fblock-arrow open">▾</span>
+          </span>
+        </button>
+        <div class="fblock-body open">
+          <div class="fopt" onclick="sbFilter('criticidad','Crítica',this)"><span>🔴 Crítica</span><span class="fcnt" id="cnt-critica">0</span></div>
+          <div class="fopt" onclick="sbFilter('criticidad','Alta',this)"><span>🟠 Alta</span><span class="fcnt" id="cnt-alta">0</span></div>
+          <div class="fopt" onclick="sbFilter('criticidad','Media',this)"><span>🟡 Media</span><span class="fcnt" id="cnt-media">0</span></div>
+          <div class="fopt" onclick="sbFilter('criticidad','Baja',this)"><span>🟢 Baja</span><span class="fcnt" id="cnt-baja">0</span></div>
+        </div>
+      </div>
+      <!-- 2. Estado -->
       <div class="fblock" id="fb-estado">
         <button class="fblock-btn" onclick="toggleFblock('fb-estado')">
           <span>Estado</span>
           <span style="display:flex;align-items:center;gap:4px">
             <span class="fblock-cnt" id="fb-cnt-estado"></span>
-            <span class="fblock-arrow">▾</span>
+            <span class="fblock-arrow open">▾</span>
           </span>
         </button>
         <div class="fblock-body open">
@@ -308,23 +366,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
           <div class="fopt" onclick="sbFilter('estado','Descartada',this)"><span>⚪ Descartada</span><span class="fcnt" id="cnt-descartada">0</span></div>
         </div>
       </div>
-      <!-- Criticidad -->
-      <div class="fblock" id="fb-criticidad">
-        <button class="fblock-btn" onclick="toggleFblock('fb-criticidad')">
-          <span>Criticidad</span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span class="fblock-cnt" id="fb-cnt-criticidad"></span>
-            <span class="fblock-arrow">▾</span>
-          </span>
-        </button>
-        <div class="fblock-body open">
-          <div class="fopt" onclick="sbFilter('criticidad','Crítica',this)"><span>🔴 Crítica</span><span class="fcnt" id="cnt-critica">0</span></div>
-          <div class="fopt" onclick="sbFilter('criticidad','Alta',this)"><span>🟠 Alta</span><span class="fcnt" id="cnt-alta">0</span></div>
-          <div class="fopt" onclick="sbFilter('criticidad','Media',this)"><span>🟡 Media</span><span class="fcnt" id="cnt-media">0</span></div>
-          <div class="fopt" onclick="sbFilter('criticidad','Baja',this)"><span>🟢 Baja</span><span class="fcnt" id="cnt-baja">0</span></div>
-        </div>
-      </div>
-      <!-- Categoría -->
+      <!-- 3. Categoría -->
       <div class="fblock" id="fb-tipo">
         <button class="fblock-btn" onclick="toggleFblock('fb-tipo')">
           <span>Categoría</span>
@@ -335,29 +377,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
         </button>
         <div class="fblock-body" id="tipo-filters"></div>
       </div>
-      <!-- Situación -->
-      <div class="fblock" id="fb-situacion">
-        <button class="fblock-btn" onclick="toggleFblock('fb-situacion')">
-          <span>Situación</span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span class="fblock-cnt" id="fb-cnt-situacion"></span>
-            <span class="fblock-arrow">▾</span>
-          </span>
-        </button>
-        <div class="fblock-body" id="situacion-filters"></div>
-      </div>
-      <!-- Obra -->
-      <div class="fblock" id="fb-obra">
-        <button class="fblock-btn" onclick="toggleFblock('fb-obra')">
-          <span>Obra</span>
-          <span style="display:flex;align-items:center;gap:4px">
-            <span class="fblock-cnt" id="fb-cnt-obra"></span>
-            <span class="fblock-arrow">▾</span>
-          </span>
-        </button>
-        <div class="fblock-body" id="obra-filters"></div>
-      </div>
-      <!-- Creado por -->
+      <!-- 4. Creado por -->
       <div class="fblock" id="fb-usuario">
         <button class="fblock-btn" onclick="toggleFblock('fb-usuario')">
           <span>Creado por</span>
@@ -368,7 +388,50 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
         </button>
         <div class="fblock-body" id="user-filters"></div>
       </div>
-      <div style="padding:8px 10px 0">
+      <!-- 5. Fecha -->
+      <div class="fblock" id="fb-fecha">
+        <button class="fblock-btn" onclick="toggleFblock('fb-fecha')">
+          <span>Fecha</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-fecha"></span>
+            <span class="fblock-arrow">▾</span>
+          </span>
+        </button>
+        <div class="date-filter-body" id="fb-fecha-body">
+          <div class="date-row">
+            <label>Desde</label>
+            <input type="date" class="date-input" id="filter-fecha-desde" onchange="onFechaChange()">
+          </div>
+          <div class="date-row">
+            <label>Hasta</label>
+            <input type="date" class="date-input" id="filter-fecha-hasta" onchange="onFechaChange()">
+          </div>
+          <button class="date-clear" onclick="clearFecha()">✕ Limpiar fechas</button>
+        </div>
+      </div>
+      <!-- 6. Obra -->
+      <div class="fblock" id="fb-obra">
+        <button class="fblock-btn" onclick="toggleFblock('fb-obra')">
+          <span>Obra</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-obra"></span>
+            <span class="fblock-arrow">▾</span>
+          </span>
+        </button>
+        <div class="fblock-body" id="obra-filters"></div>
+      </div>
+      <!-- 7. Situación -->
+      <div class="fblock" id="fb-situacion">
+        <button class="fblock-btn" onclick="toggleFblock('fb-situacion')">
+          <span>Situación</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-situacion"></span>
+            <span class="fblock-arrow">▾</span>
+          </span>
+        </button>
+        <div class="fblock-body" id="situacion-filters"></div>
+      </div>
+      <div style="padding:8px 10px 4px">
         <button class="clear-filters-btn" onclick="clearFilters()">✕ Limpiar filtros</button>
       </div>
     </div>
@@ -516,6 +579,8 @@ let unsubscribe = null;
 let editId = null;
 let selectedId = null;
 let filters = { estado:'', criticidad:'', tipo:'', situacion:'', obra:'', usuario:'' };
+let fechaDesde = null; // Date object
+let fechaHasta = null; // Date object
 let sortCol  = 'creadoEn';
 let sortDir  = 'desc'; // 'asc' | 'desc'
 // Adjuntos pendientes en el formulario (antes de guardar)
@@ -672,6 +737,13 @@ function getFiltered(){
     if(filters.obra      &&a.obra!==filters.obra) return false;
     if(filters.usuario   &&a.creadoPor!==filters.usuario) return false;
     if(q&&!((a.descripcion||'').toLowerCase().includes(q)||(a.obra||'').toLowerCase().includes(q)||(a.tipo||'').toLowerCase().includes(q))) return false;
+    if(fechaDesde||fechaHasta){
+      const ts = a.creadoEn?.toDate?.()||null;
+      if(!ts) return false;
+      const d = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate());
+      if(fechaDesde && d < fechaDesde) return false;
+      if(fechaHasta && d > fechaHasta) return false;
+    }
     return true;
   });
 }
@@ -691,6 +763,17 @@ function render(){
   document.getElementById('cnt-alta').textContent       =alerts.filter(a=>a.criticidad==='Alta').length;
   document.getElementById('cnt-media').textContent      =alerts.filter(a=>a.criticidad==='Media').length;
   document.getElementById('cnt-baja').textContent       =alerts.filter(a=>a.criticidad==='Baja').length;
+  // Tarjetas resumen — solo alertas Activas
+  const activas = alerts.filter(a=>a.estado==='Activa');
+  document.getElementById('sum-n-critica').textContent = activas.filter(a=>a.criticidad==='Crítica').length;
+  document.getElementById('sum-n-alta').textContent    = activas.filter(a=>a.criticidad==='Alta').length;
+  document.getElementById('sum-n-media').textContent   = activas.filter(a=>a.criticidad==='Media').length;
+  document.getElementById('sum-n-baja').textContent    = activas.filter(a=>a.criticidad==='Baja').length;
+  // Resaltar tarjeta activa si hay filtro de criticidad
+  ['critica','alta','media','baja'].forEach(k=>{
+    const card = document.getElementById('sum-'+k);
+    if(card) card.style.opacity = filters.criticidad && filters.criticidad.toLowerCase()!==k ? '0.45' : '1';
+  });
 
   const tipos=[...new Set(alerts.map(a=>a.tipo).filter(Boolean))].sort();
   document.getElementById('tipo-filters').innerHTML=tipos.map(t=>
@@ -1139,19 +1222,58 @@ window.deleteAlert=async function(id){
 // ── FILTROS ───────────────────────────────────────────────────────────
 window.sbFilter=function(k,v,el){
   filters[k]=filters[k]===v?'':v;
-  el.closest('.fblock-body')?.querySelectorAll('.fopt').forEach(e=>e.classList.remove('active'));
-  if(filters[k]===v) el.classList.add('active');
+  if(el){
+    el.closest('.fblock-body')?.querySelectorAll('.fopt').forEach(e=>e.classList.remove('active'));
+    if(filters[k]===v) el.classList.add('active');
+  } else {
+    // Llamado desde tarjeta — sincronizar el fopt correspondiente en sidebar
+    document.querySelectorAll(`[onclick*="sbFilter('${k}'"]`).forEach(e=>{
+      if(e.tagName==='DIV') e.classList.remove('active');
+    });
+    if(filters[k]===v){
+      document.querySelectorAll(`[onclick*="sbFilter('${k}','${v}'"]`).forEach(e=>{
+        if(e.classList.contains('fopt')) e.classList.add('active');
+      });
+    }
+  }
   render();
 };
 
 window.toggleFblock=function(id){
   const block = document.getElementById(id);
   if(!block) return;
-  const body  = block.querySelector('.fblock-body');
+  const body  = block.querySelector('.fblock-body, .date-filter-body');
   const arrow = block.querySelector('.fblock-arrow');
+  if(!body) return;
   const isOpen = body.classList.contains('open');
   body.classList.toggle('open', !isOpen);
-  arrow.classList.toggle('open', !isOpen);
+  if(arrow) arrow.classList.toggle('open', !isOpen);
+};
+
+window.onFechaChange=function(){
+  const desde = document.getElementById('filter-fecha-desde')?.value;
+  const hasta = document.getElementById('filter-fecha-hasta')?.value;
+  fechaDesde = desde ? new Date(desde+'T00:00:00') : null;
+  fechaHasta = hasta ? new Date(hasta+'T23:59:59') : null;
+  // Indicador en botón
+  const cnt = document.getElementById('fb-cnt-fecha');
+  const btn = document.getElementById('fb-fecha')?.querySelector('.fblock-btn');
+  const label = [desde?'Desde '+desde.slice(5):'', hasta?'Hasta '+hasta.slice(5):''].filter(Boolean).join(' ');
+  if(cnt) cnt.textContent = label ? '●' : '';
+  if(btn) btn.classList.toggle('has-filter', !!(fechaDesde||fechaHasta));
+  render();
+};
+
+window.clearFecha=function(){
+  fechaDesde=null; fechaHasta=null;
+  const d=document.getElementById('filter-fecha-desde');
+  const h=document.getElementById('filter-fecha-hasta');
+  if(d) d.value=''; if(h) h.value='';
+  const cnt=document.getElementById('fb-cnt-fecha');
+  const btn=document.getElementById('fb-fecha')?.querySelector('.fblock-btn');
+  if(cnt) cnt.textContent='';
+  if(btn) btn.classList.remove('has-filter');
+  render();
 };
 
 window.setSort=function(col){
@@ -1165,6 +1287,9 @@ window.clearFilters=function(){
   document.querySelectorAll('.fopt').forEach(e=>e.classList.remove('active'));
   document.querySelector('.fopt')?.classList.add('active');
   if(document.getElementById('mob-crit-filter')) document.getElementById('mob-crit-filter').value='';
+  clearFecha();
+  document.querySelectorAll('.fblock-btn').forEach(b=>b.classList.remove('has-filter'));
+  document.querySelectorAll('.fblock-cnt').forEach(b=>b.textContent='');
   render();
 };
 
