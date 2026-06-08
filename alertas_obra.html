@@ -364,6 +364,77 @@ const db      = getFirestore(fbApp);
 const auth    = getAuth(fbApp);
 const provider = new GoogleAuthProvider();
 
+const SITUACIONES = {
+  'C1 - Personas': [
+    'Alta rotación de trabajadores y/o supervisión',
+    'Problema de liderazgo o habilidades blandas',
+    'Bajo compromiso o mal clima laboral',
+    'Supervisores no revisan',
+    'Mala calidad subcontratista o falta de MO',
+    'Poca coordinación entre especialidades',
+    'Obra está lejos, no llega gente',
+    'Otros'
+  ],
+  'C2 - Ejecución': [
+    'Falla de equipo crítico (grúa, excavadora, generador, etc.)',
+    'Mal rendimiento o ejecución subcontratista',
+    'Reproceso por error',
+    'Uso de productos nuevos sin pruebas previas',
+    'Mala planificación de trabajos o error',
+    'Orden y limpieza deficiente',
+    'Otros'
+  ],
+  'C3 - Abastecimiento': [
+    'Falta de materiales o quiebre de stock',
+    'Bodega desordenada — sin control de stock ni inventario',
+    'Alza de precios materiales',
+    'Provisión de materiales comprometida con proveedores sin contrato formal',
+    'Otros'
+  ],
+  'C4 - Proyecto': [
+    'Errores de proyecto o falta de coordinación',
+    'RDI o definiciones de proyecto sin respuesta oportuna',
+    'Actualizaciones o cambios de proyecto que no bajan a obra',
+    'Cambios de normativa que derivan en rediseño de planos sin aviso previo',
+    'Conflicto entre estandarización interna y requerimientos del proyecto nuevo',
+    'Otros'
+  ],
+  'C5 - Inmobiliaria': [
+    'Inicio de obra sin contrato o con definiciones contractuales incompletas',
+    'Sin acuerdo en criterios de recepción o en presentación de adicionales',
+    'Partidas no consideradas en presupuesto',
+    'Precio y/o plazo muy apretado desde el inicio',
+    'Objetivos propios no alineados con la empresa',
+    'Cambio de ITO sin inducción ni traspaso formal',
+    'Otros'
+  ],
+  'C6 - Seguridad': [
+    'Casi-accidentes o condiciones de alto potencial sin reporte ni registro',
+    'Fiscalización de organismo externo (SMA, Inspección, Mutual, DOM)',
+    'Riesgo de paralización por accidente, reclamo o demanda',
+    'Normativa local no conocida o no considerada (DIA, DIMA, DOM)',
+    'Mal liderazgo en seguridad',
+    'Otros'
+  ],
+  'C7 - Entorno y comunidad': [
+    'Reclamos, conflictos o entorno adverso con vecinos u organismos (DOM, SMA, municipio)',
+    'Ruido, restricciones horarias o multas por incumplimiento de normativa comunal',
+    'Terreno o logística compleja — accesos, espacio, obras paralelas, camiones',
+    '[INICIO DE OBRA] Obra colindante a proyecto anterior propio — consultar historial Post Venta',
+    'Otros'
+  ],
+  'C8 - Gestión': [
+    'Comunicación deficiente entre Oficina y Obra — materiales, control, definiciones',
+    'Problemas que se repiten sin corrección — ausencia de aprendizaje organizacional',
+    'Presupuesto no contempla complejidad de la obra',
+    'Gastos corriendo sin producción que los respalde — obra en espera o en inicio sin fecha confirmada',
+    'Estado de pago listo o vencido pero no presentado — retraso de cobro sin justificación',
+    'Avance físico no cuadra con lo facturado',
+    'Extras ejecutados que no se han acordado',
+    'ITO no valida avance para cobrarlo',
+    'Otros'
+  ]
+};
 const APP_ID    = 'piloto2_alertas';
 const COLECCION = 'piloto2_alertas';
 
@@ -600,6 +671,7 @@ function render(){
       else if(sortCol==='obra')    { va=(a.obra||'').toLowerCase(); vb=(b.obra||'').toLowerCase(); }
       else if(sortCol==='criticidad'){ va=CRIT_ORD[a.criticidad]||0; vb=CRIT_ORD[b.criticidad]||0; }
       else if(sortCol==='tipo')    { va=(a.tipo||'').toLowerCase(); vb=(b.tipo||'').toLowerCase(); }
+      else if(sortCol==='situacion'){ va=(a.situacion||'').toLowerCase(); vb=(b.situacion||'').toLowerCase(); }
       else if(sortCol==='estado')  { va=EST_ORD[a.estado]||0; vb=EST_ORD[b.estado]||0; }
       if(va<vb) return sortDir==='asc'?-1:1;
       if(va>vb) return sortDir==='asc'?1:-1;
@@ -626,6 +698,7 @@ function render(){
         <td class="td-txt">${esc(a.obra||'—')}</td>
         <td>${critBadge(a.criticidad)}</td>
         <td class="td-cat">${esc(a.tipo||'—')}</td>
+        <td class="td-cat">${esc(a.situacion||'—')}</td>
         <td style="padding-right:14px">${estadoBadge(a.estado)}</td>
       </tr>`;
     }).join('');
@@ -634,12 +707,13 @@ function render(){
       <colgroup>
         <col style="width:22px">
         <col>
-        <col style="width:116px">
-        <col style="width:82px">
-        <col style="width:72px">
-        <col style="width:84px">
-        <col style="width:128px">
+        <col style="width:110px">
+        <col style="width:76px">
+        <col style="width:68px">
         <col style="width:80px">
+        <col style="width:110px">
+        <col style="width:140px">
+        <col style="width:76px">
       </colgroup>
       <thead><tr>
         <th style="width:22px;padding-left:14px"></th>
@@ -649,6 +723,7 @@ function render(){
         ${thSort('obra','Obra')}
         ${thSort('criticidad','Criticidad')}
         ${thSort('tipo','Categoría')}
+        ${thSort('situacion','Situación')}
         ${thSort('estado','Estado')}
       </tr></thead>
       <tbody>${rows}</tbody>
@@ -682,6 +757,7 @@ function renderDetail(a){
     <div class="dp-field"><label>Estado</label><p>${estadoBadge(a.estado)}</p></div>
     <div class="dp-field"><label>Obra</label><p>${esc(a.obra||'Sin especificar')}</p></div>
     <div class="dp-field"><label>Categoría</label><p>${esc(a.tipo||'Sin categorizar')}</p></div>
+    <div class="dp-field"><label>Situación</label><p>${esc(a.situacion||'Sin especificar')}</p></div>
     <div class="dp-field"><label>Reportado por</label><p>${esc(nombreVisible(a))}</p></div>
     <div class="dp-field"><label>Fecha y hora</label><p>${fmtFechaLarga(a.creadoEn)}</p></div>
     <div class="dp-field"><label>Adjuntos</label>${adjListHTML(a.adjuntos)}</div>`;
@@ -795,6 +871,22 @@ window.removeExisting=function(idx){
 };
 
 // ── SUBIDA A STORAGE ──────────────────────────────────────────────────
+
+// Actualiza el select de situación según la categoría seleccionada
+window.updateSituaciones = function(selectTipoEl) {
+  const tipo = selectTipoEl ? selectTipoEl.value : (document.getElementById('f-tipo')?.value || '');
+  const sel  = document.getElementById('f-situacion');
+  if (!sel) return;
+  const lista = SITUACIONES[tipo] || [];
+  if (!lista.length) {
+    sel.innerHTML = '<option value="">Seleccionar categoría primero</option>';
+    sel.disabled = true;
+  } else {
+    sel.disabled = false;
+    sel.innerHTML = '<option value="" disabled selected>Seleccionar situación *</option>' +
+      lista.map(s => `<option value="${s.replace(/"/g,'&quot;')}">${s}</option>`).join('');
+  }
+};
 // uploadFiles — disponible cuando se active Firebase Storage
 
 // ── MODAL ─────────────────────────────────────────────────────────────
@@ -823,10 +915,16 @@ function buildForm(a){
     </div>
     <div class="fg">
       <label class="fl">Categoría</label>
-      <select class="fsel" id="f-tipo">
+      <select class="fsel" id="f-tipo" onchange="updateSituaciones(this)">
         <option value="" disabled selected>Seleccionar categoría *</option>
         ${['C1 - Personas','C2 - Ejecución','C3 - Abastecimiento','C4 - Proyecto','C5 - Inmobiliaria','C6 - Seguridad','C7 - Entorno y comunidad','C8 - Gestión']
           .map(t=>`<option value="${t}"${a?.tipo===t?' selected':''}>${t.replace(' - ',' · ')}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Situación</label>
+      <select class="fsel" id="f-situacion" disabled>
+        <option value="">Seleccionar categoría primero</option>
       </select>
     </div>
     ${a ? `<div class="fg">
@@ -857,6 +955,15 @@ window.openModal=function(id){
   existingAdjuntos=a?.adjuntos?JSON.parse(JSON.stringify(a.adjuntos)):[];
   document.getElementById('modal-inner').innerHTML=buildForm(a);
   renderAdjuntosForm();
+  // Poblar situaciones si hay categoría ya seleccionada (modo edición)
+  if(a?.tipo) {
+    updateSituaciones(null);
+    const fSit = document.getElementById('f-situacion');
+    if(fSit && a.situacion) {
+      // Intentar seleccionar el valor guardado
+      [...fSit.options].forEach(o => { if(o.value === a.situacion) o.selected = true; });
+    }
+  }
   document.getElementById('modal-bg').classList.add('open');
   setTimeout(()=>document.getElementById('f-desc')?.focus(),200);
 };
@@ -871,6 +978,7 @@ window.saveAlert=async function(){
   const obra       =document.getElementById('f-obra')?.value||'';
   const criticidad =document.getElementById('f-criticidad')?.value||'';
   const tipo       =document.getElementById('f-tipo')?.value||'';
+  const situacion  =document.getElementById('f-situacion')?.value||'';
   const estado     =document.getElementById('f-estado')?.value||'Activa';
 
   // Validación campos obligatorios
@@ -890,17 +998,21 @@ window.saveAlert=async function(){
     document.getElementById('f-tipo')?.focus();
     showToast('⚠ Debes seleccionar una categoría'); return;
   }
+  if(!situacion){
+    document.getElementById('f-situacion')?.focus();
+    showToast('⚠ Debes seleccionar una situación'); return;
+  }
 
   const btn=document.getElementById('btn-guardar');
   if(btn){btn.disabled=true;btn.textContent=pendingFiles.length?'Subiendo...':'Guardando...';}
 
   try{
     if(editId){
-      await updateDoc(doc(db,COLECCION,editId),{descripcion:desc,obra,criticidad,tipo,estado});
+      await updateDoc(doc(db,COLECCION,editId),{descripcion:desc,obra,criticidad,tipo,situacion,estado});
       showToast('✓ Alerta actualizada');
     } else {
       await addDoc(collection(db,COLECCION),{
-        descripcion:desc,obra,criticidad,tipo,estado:'Activa',
+        descripcion:desc,obra,criticidad,tipo,situacion,estado:'Activa',
         creadoPor:currentUser.email,
         creadoNombre:currentUser.displayName||currentUser.email.split('@')[0],
         creadoEn:serverTimestamp(),
