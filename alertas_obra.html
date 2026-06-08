@@ -276,6 +276,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
   <div class="layout">
     <!-- SIDEBAR -->
     <div class="sidebar desk-only">
+      <!-- Estado -->
       <div class="sb-section">Estado</div>
       <div class="fblock-body">
         <div class="fopt active" onclick="sbFilter('estado','',this)"><span>Todas</span><span class="fcnt" id="cnt-all">0</span></div>
@@ -284,6 +285,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
         <div class="fopt" onclick="sbFilter('estado','Resuelta',this)"><span>🟢 Resuelta</span><span class="fcnt" id="cnt-resuelta">0</span></div>
         <div class="fopt" onclick="sbFilter('estado','Descartada',this)"><span>⚪ Descartada</span><span class="fcnt" id="cnt-descartada">0</span></div>
       </div>
+      <!-- Criticidad -->
       <div class="sb-section">Criticidad</div>
       <div class="fblock-body">
         <div class="fopt" onclick="sbFilter('criticidad','Crítica',this)"><span>🔴 Crítica</span><span class="fcnt" id="cnt-critica">0</span></div>
@@ -291,11 +293,17 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
         <div class="fopt" onclick="sbFilter('criticidad','Media',this)"><span>🟡 Media</span><span class="fcnt" id="cnt-media">0</span></div>
         <div class="fopt" onclick="sbFilter('criticidad','Baja',this)"><span>🟢 Baja</span><span class="fcnt" id="cnt-baja">0</span></div>
       </div>
-      <div class="sb-section">Tipo</div>
+      <!-- Categoría — título igual al encabezado de tabla -->
+      <div class="sb-section">Categoría</div>
       <div class="fblock-body" id="tipo-filters"></div>
+      <!-- Situación — título igual al encabezado de tabla -->
+      <div class="sb-section">Situación</div>
+      <div class="fblock-body" id="situacion-filters"></div>
+      <!-- Obra -->
       <div class="sb-section">Obra</div>
       <div class="fblock-body" id="obra-filters"></div>
-      <div class="sb-section">Reportado por</div>
+      <!-- Creado por — título igual al encabezado de tabla -->
+      <div class="sb-section">Creado por</div>
       <div class="fblock-body" id="user-filters"></div>
       <div style="padding:8px 10px 0">
         <button class="clear-filters-btn" onclick="clearFilters()">✕ Limpiar filtros</button>
@@ -444,7 +452,7 @@ let alerts = [];
 let unsubscribe = null;
 let editId = null;
 let selectedId = null;
-let filters = { estado:'', criticidad:'', tipo:'', obra:'', usuario:'' };
+let filters = { estado:'', criticidad:'', tipo:'', situacion:'', obra:'', usuario:'' };
 let sortCol  = 'creadoEn';
 let sortDir  = 'desc'; // 'asc' | 'desc'
 // Adjuntos pendientes en el formulario (antes de guardar)
@@ -597,6 +605,7 @@ function getFiltered(){
     if(filters.criticidad&&a.criticidad!==filters.criticidad) return false;
     if(mobCrit           &&a.criticidad!==mobCrit) return false;
     if(filters.tipo      &&a.tipo!==filters.tipo) return false;
+    if(filters.situacion &&a.situacion!==filters.situacion) return false;
     if(filters.obra      &&a.obra!==filters.obra) return false;
     if(filters.usuario   &&a.creadoPor!==filters.usuario) return false;
     if(q&&!((a.descripcion||'').toLowerCase().includes(q)||(a.obra||'').toLowerCase().includes(q)||(a.tipo||'').toLowerCase().includes(q))) return false;
@@ -624,6 +633,16 @@ function render(){
   document.getElementById('tipo-filters').innerHTML=tipos.map(t=>
     `<div class="fopt ${filters.tipo===t?'active':''}" onclick="sbFilter('tipo','${esc(t)}',this)">
       <span>${esc(t)}</span><span class="fcnt">${alerts.filter(a=>a.tipo===t).length}</span></div>`
+  ).join('')||'<div style="padding:4px 8px;font-size:11px;color:var(--text3)">Sin datos</div>';
+
+  // Filtros situación — muestra solo las situaciones de la categoría filtrada
+  const alertsParaSit = filters.tipo ? alerts.filter(a=>a.tipo===filters.tipo) : alerts;
+  const situaciones=[...new Set(alertsParaSit.map(a=>a.situacion).filter(Boolean))].sort();
+  const sitEl = document.getElementById('situacion-filters');
+  if(sitEl) sitEl.innerHTML=situaciones.map(s=>
+    `<div class="fopt ${filters.situacion===s?'active':''}" onclick="sbFilter('situacion','${esc(s)}',this)">
+      <span style="white-space:normal;line-height:1.3">${esc(s)}</span>
+      <span class="fcnt" style="flex-shrink:0;margin-left:4px">${alerts.filter(a=>a.situacion===s).length}</span></div>`
   ).join('')||'<div style="padding:4px 8px;font-size:11px;color:var(--text3)">Sin datos</div>';
 
   const obras=[...new Set(alerts.map(a=>a.obra).filter(Boolean))].sort();
@@ -1052,7 +1071,7 @@ window.setSort=function(col){
 };
 
 window.clearFilters=function(){
-  filters={estado:'',criticidad:'',tipo:'',obra:'',usuario:''};
+  filters={estado:'',criticidad:'',tipo:'',situacion:'',obra:'',usuario:''};
   document.querySelectorAll('.fopt').forEach(e=>e.classList.remove('active'));
   document.querySelector('.fopt')?.classList.add('active');
   if(document.getElementById('mob-crit-filter')) document.getElementById('mob-crit-filter').value='';
