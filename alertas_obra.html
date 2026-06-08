@@ -65,14 +65,29 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 
 /* SIDEBAR */
 .sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:10px 0;display:flex;flex-direction:column;}
-.sb-section{padding:8px 14px 3px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);}
-.fblock-body{padding:0 8px 4px;}
+/* sb-section reemplazado por fblock-btn */
+.fblock{border-bottom:1px solid var(--border);}
+.fblock-btn{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;cursor:pointer;user-select:none;
+  font-size:12px;font-weight:500;color:var(--text2);
+  background:none;border:none;width:100%;text-align:left;
+  font-family:'DM Sans',sans-serif;transition:background .1s;
+}
+.fblock-btn:hover{background:var(--surface2);color:var(--text);}
+.fblock-btn.has-filter{color:var(--red);font-weight:600;}
+.fblock-arrow{font-size:10px;transition:transform .2s;color:var(--text3);}
+.fblock-arrow.open{transform:rotate(180deg);}
+.fblock-cnt{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);margin-right:4px;}
+.fblock-btn.has-filter .fblock-cnt{color:var(--red);}
+.fblock-body{padding:0 8px 6px;display:none;}
+.fblock-body.open{display:block;}
 .fopt{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--text2);transition:background .1s;}
 .fopt:hover{background:var(--surface2);color:var(--text);}
 .fopt.active{background:var(--red-l);color:var(--red);font-weight:500;}
 .fcnt{font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);}
 .fopt.active .fcnt{color:var(--red);}
-.clear-filters-btn{margin:6px 10px;padding:5px;background:none;border:1px solid var(--border);border-radius:5px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;width:calc(100% - 20px);}
+.clear-filters-btn{margin:6px 10px;padding:6px;background:none;border:1px solid var(--border);border-radius:5px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;width:calc(100% - 20px);}
 .clear-filters-btn:hover{background:var(--red-l);color:var(--red);border-color:var(--red);}
 
 /* CONTENT */
@@ -277,34 +292,82 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
     <!-- SIDEBAR -->
     <div class="sidebar desk-only">
       <!-- Estado -->
-      <div class="sb-section">Estado</div>
-      <div class="fblock-body">
-        <div class="fopt active" onclick="sbFilter('estado','',this)"><span>Todas</span><span class="fcnt" id="cnt-all">0</span></div>
-        <div class="fopt" onclick="sbFilter('estado','Activa',this)"><span>🔴 Activa</span><span class="fcnt" id="cnt-activa">0</span></div>
-        <div class="fopt" onclick="sbFilter('estado','En gestión',this)"><span>🔵 En gestión</span><span class="fcnt" id="cnt-gestion">0</span></div>
-        <div class="fopt" onclick="sbFilter('estado','Resuelta',this)"><span>🟢 Resuelta</span><span class="fcnt" id="cnt-resuelta">0</span></div>
-        <div class="fopt" onclick="sbFilter('estado','Descartada',this)"><span>⚪ Descartada</span><span class="fcnt" id="cnt-descartada">0</span></div>
+      <div class="fblock" id="fb-estado">
+        <button class="fblock-btn" onclick="toggleFblock('fb-estado')">
+          <span>Estado</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-estado"></span>
+            <span class="fblock-arrow">▾</span>
+          </span>
+        </button>
+        <div class="fblock-body open">
+          <div class="fopt active" onclick="sbFilter('estado','',this)"><span>Todas</span><span class="fcnt" id="cnt-all">0</span></div>
+          <div class="fopt" onclick="sbFilter('estado','Activa',this)"><span>🔴 Activa</span><span class="fcnt" id="cnt-activa">0</span></div>
+          <div class="fopt" onclick="sbFilter('estado','En gestión',this)"><span>🔵 En gestión</span><span class="fcnt" id="cnt-gestion">0</span></div>
+          <div class="fopt" onclick="sbFilter('estado','Resuelta',this)"><span>🟢 Resuelta</span><span class="fcnt" id="cnt-resuelta">0</span></div>
+          <div class="fopt" onclick="sbFilter('estado','Descartada',this)"><span>⚪ Descartada</span><span class="fcnt" id="cnt-descartada">0</span></div>
+        </div>
       </div>
       <!-- Criticidad -->
-      <div class="sb-section">Criticidad</div>
-      <div class="fblock-body">
-        <div class="fopt" onclick="sbFilter('criticidad','Crítica',this)"><span>🔴 Crítica</span><span class="fcnt" id="cnt-critica">0</span></div>
-        <div class="fopt" onclick="sbFilter('criticidad','Alta',this)"><span>🟠 Alta</span><span class="fcnt" id="cnt-alta">0</span></div>
-        <div class="fopt" onclick="sbFilter('criticidad','Media',this)"><span>🟡 Media</span><span class="fcnt" id="cnt-media">0</span></div>
-        <div class="fopt" onclick="sbFilter('criticidad','Baja',this)"><span>🟢 Baja</span><span class="fcnt" id="cnt-baja">0</span></div>
+      <div class="fblock" id="fb-criticidad">
+        <button class="fblock-btn" onclick="toggleFblock('fb-criticidad')">
+          <span>Criticidad</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-criticidad"></span>
+            <span class="fblock-arrow">▾</span>
+          </span>
+        </button>
+        <div class="fblock-body open">
+          <div class="fopt" onclick="sbFilter('criticidad','Crítica',this)"><span>🔴 Crítica</span><span class="fcnt" id="cnt-critica">0</span></div>
+          <div class="fopt" onclick="sbFilter('criticidad','Alta',this)"><span>🟠 Alta</span><span class="fcnt" id="cnt-alta">0</span></div>
+          <div class="fopt" onclick="sbFilter('criticidad','Media',this)"><span>🟡 Media</span><span class="fcnt" id="cnt-media">0</span></div>
+          <div class="fopt" onclick="sbFilter('criticidad','Baja',this)"><span>🟢 Baja</span><span class="fcnt" id="cnt-baja">0</span></div>
+        </div>
       </div>
-      <!-- Categoría — título igual al encabezado de tabla -->
-      <div class="sb-section">Categoría</div>
-      <div class="fblock-body" id="tipo-filters"></div>
-      <!-- Situación — título igual al encabezado de tabla -->
-      <div class="sb-section">Situación</div>
-      <div class="fblock-body" id="situacion-filters"></div>
+      <!-- Categoría -->
+      <div class="fblock" id="fb-tipo">
+        <button class="fblock-btn" onclick="toggleFblock('fb-tipo')">
+          <span>Categoría</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-tipo"></span>
+            <span class="fblock-arrow">▾</span>
+          </span>
+        </button>
+        <div class="fblock-body" id="tipo-filters"></div>
+      </div>
+      <!-- Situación -->
+      <div class="fblock" id="fb-situacion">
+        <button class="fblock-btn" onclick="toggleFblock('fb-situacion')">
+          <span>Situación</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-situacion"></span>
+            <span class="fblock-arrow">▾</span>
+          </span>
+        </button>
+        <div class="fblock-body" id="situacion-filters"></div>
+      </div>
       <!-- Obra -->
-      <div class="sb-section">Obra</div>
-      <div class="fblock-body" id="obra-filters"></div>
-      <!-- Creado por — título igual al encabezado de tabla -->
-      <div class="sb-section">Creado por</div>
-      <div class="fblock-body" id="user-filters"></div>
+      <div class="fblock" id="fb-obra">
+        <button class="fblock-btn" onclick="toggleFblock('fb-obra')">
+          <span>Obra</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-obra"></span>
+            <span class="fblock-arrow">▾</span>
+          </span>
+        </button>
+        <div class="fblock-body" id="obra-filters"></div>
+      </div>
+      <!-- Creado por -->
+      <div class="fblock" id="fb-usuario">
+        <button class="fblock-btn" onclick="toggleFblock('fb-usuario')">
+          <span>Creado por</span>
+          <span style="display:flex;align-items:center;gap:4px">
+            <span class="fblock-cnt" id="fb-cnt-usuario"></span>
+            <span class="fblock-arrow">▾</span>
+          </span>
+        </button>
+        <div class="fblock-body" id="user-filters"></div>
+      </div>
       <div style="padding:8px 10px 0">
         <button class="clear-filters-btn" onclick="clearFilters()">✕ Limpiar filtros</button>
       </div>
@@ -638,6 +701,23 @@ function render(){
   // Filtros situación — muestra solo las situaciones de la categoría filtrada
   const alertsParaSit = filters.tipo ? alerts.filter(a=>a.tipo===filters.tipo) : alerts;
   const situaciones=[...new Set(alertsParaSit.map(a=>a.situacion).filter(Boolean))].sort();
+  // Indicadores de filtro activo en los botones del sidebar
+  const fbMap = {
+    'fb-cnt-estado':    filters.estado    ? filters.estado    : '',
+    'fb-cnt-criticidad':filters.criticidad? filters.criticidad: '',
+    'fb-cnt-tipo':      filters.tipo      ? filters.tipo.split(' - ')[0] : '',
+    'fb-cnt-situacion': filters.situacion ? '●' : '',
+    'fb-cnt-obra':      filters.obra      ? filters.obra      : '',
+    'fb-cnt-usuario':   filters.usuario   ? filters.usuario.split('@')[0] : '',
+  };
+  Object.entries(fbMap).forEach(([id, val])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = val;
+    const btn = el.closest('.fblock-btn');
+    if(btn) btn.classList.toggle('has-filter', !!val);
+  });
+
   const sitEl = document.getElementById('situacion-filters');
   if(sitEl) sitEl.innerHTML=situaciones.map(s=>
     `<div class="fopt ${filters.situacion===s?'active':''}" onclick="sbFilter('situacion','${esc(s)}',this)">
@@ -1062,6 +1142,16 @@ window.sbFilter=function(k,v,el){
   el.closest('.fblock-body')?.querySelectorAll('.fopt').forEach(e=>e.classList.remove('active'));
   if(filters[k]===v) el.classList.add('active');
   render();
+};
+
+window.toggleFblock=function(id){
+  const block = document.getElementById(id);
+  if(!block) return;
+  const body  = block.querySelector('.fblock-body');
+  const arrow = block.querySelector('.fblock-arrow');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
 };
 
 window.setSort=function(col){
