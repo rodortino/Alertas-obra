@@ -1687,10 +1687,10 @@ window.renderDashboard = function(){
       if(cMes._chart) cMes._chart.destroy();
       cMes._chart = new Chart(cMes,{
         type:'bar',
-        data:{labels:meses.map(m=>m.lbl),datasets:[{label:'Alertas',data:mesData,backgroundColor:'#CC2929',borderRadius:4,borderSkipped:false}]},
+        data:{labels:meses.map(m=>m.lbl),datasets:[{label:'Alertas',data:mesData,backgroundColor:'#CC2929',borderRadius:4,borderSkipped:false,minBarLength:3}]},
         options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
-          x:{ticks:{color:textC,font:{size:11}},grid:{display:false},border:{display:false}},
-          y:{ticks:{color:textC,font:{size:11},stepSize:1},grid:{color:gridC},border:{display:false}}
+          x:{ticks:{color:textC,font:{size:11},autoSkip:false,maxRotation:0},grid:{display:false},border:{display:false}},
+          y:{ticks:{color:textC,font:{size:11},stepSize:1,precision:0},grid:{color:gridC},border:{display:false},min:0,grace:'10%'}
         }}
       });
     }
