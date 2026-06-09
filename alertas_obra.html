@@ -52,10 +52,54 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 .hdr-left h1{font-size:15px;font-weight:600;line-height:1.2;}
 .hdr-left p{font-size:10px;opacity:.65;}
 .hdr-right{display:flex;align-items:center;gap:8px;}
-.hbtn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;padding:0 12px;height:32px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:background .15s;}
+.hbtn{background:rgba(255,255,255,.15);border:1px solid transparent;color:#fff;border-radius:6px;padding:0 12px;height:32px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:background .15s;}
 .hbtn:hover{background:rgba(255,255,255,.25);}
 .hbtn.primary{background:#fff;color:var(--red);font-weight:600;display:flex;align-items:center;gap:4px;}
 .hbtn.primary:hover{background:#f5f5f5;}
+.hbtn.tab-active{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.6);}
+/* ── DASHBOARD ── */
+.db-view{display:none;flex:1;overflow-y:auto;flex-direction:column;background:var(--cream);}
+.db-view.open{display:flex;}
+.db-filter-bar{display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0;}
+.db-filter-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-right:2px;}
+.db-fsel{border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2);background:var(--cream);font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;}
+.db-fsel:focus{border-color:var(--red);}
+.db-fsel.active{border-color:var(--red);color:var(--red);background:var(--red-l);}
+.db-fsep{width:1px;height:18px;background:var(--border);margin:0 2px;}
+.db-clear{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;padding:3px 6px;border-radius:4px;}
+.db-clear:hover{color:var(--red);}
+.db-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+.db-row{display:grid;gap:10px;}
+.db-r4{grid-template-columns:repeat(4,minmax(0,1fr));}
+.db-r3{grid-template-columns:1.3fr 1fr 1fr;}
+.db-r2{grid-template-columns:1fr 1fr;}
+.db-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.db-kpi-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.db-kpi-num{font-size:26px;font-weight:600;line-height:1;color:var(--text);}
+.db-kpi-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+.db-card-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.db-bar-row{display:flex;align-items:center;gap:7px;margin-bottom:6px;cursor:pointer;border-radius:4px;padding:2px 4px;transition:background .1s;}
+.db-bar-row:hover{background:var(--surface);}
+.db-bar-lbl{font-size:11px;color:var(--text2);width:118px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.db-bar-wrap{flex:1;background:var(--surface2);border-radius:3px;height:7px;overflow:hidden;}
+.db-bar-fill{height:100%;border-radius:3px;transition:width .3s;}
+.db-bar-num{font-size:11px;color:var(--text3);width:16px;text-align:right;flex-shrink:0;}
+.db-st-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);}
+.db-st-row:last-child{border-bottom:none;}
+.db-st-name{font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;}
+.db-st-bar{width:65px;background:var(--surface2);border-radius:3px;height:5px;overflow:hidden;margin:0 8px;}
+.db-st-fill{height:100%;border-radius:3px;}
+.db-st-num{font-size:11px;color:var(--text3);width:16px;text-align:right;}
+.db-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.db-leg{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.db-leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);}
+.db-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;border:1px solid var(--border);background:var(--surface);color:var(--text2);margin:0 3px 3px 0;}
+.db-chip strong{color:var(--text);}
+.db-alerta-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);}
+.db-alerta-row:last-child{border-bottom:none;}
+.db-alerta-bar{width:3px;min-height:30px;border-radius:2px;flex-shrink:0;margin-top:3px;}
+.db-alerta-desc{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:2px;}
+.db-alerta-meta{font-size:11px;color:var(--text3);}
 .hdr-avatar{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;color:#fff;}
 .sync-bar{display:flex;align-items:center;gap:5px;font-size:11px;opacity:.85;}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:rgba(150,255,180,.85);}
@@ -307,7 +351,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
         <div class="sync-dot" id="sync-dot"></div>
         <span id="sync-text">Conectando...</span>
       </div>
-      <button class="hbtn primary desk-only" onclick="openModal()">+ Nueva alerta</button>
+      <div class="desk-only" style="display:flex;gap:4px;align-items:center">
+        <button class="hbtn tab-btn" id="tab-alertas" onclick="switchTab('alertas')">Alertas</button>
+        <button class="hbtn tab-btn" id="tab-dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+      </div>
+      <button class="hbtn primary" onclick="openModal()" id="btn-nueva">+ Nueva alerta</button>
       <div class="hdr-avatar" id="hdr-avatar" onclick="signOut()" title="Cerrar sesión">?</div>
     </div>
   </div>
@@ -469,6 +517,43 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 
 <!-- FAB -->
 <button class="fab mob-only" onclick="openModal()">+</button>
+
+<!-- DASHBOARD VIEW -->
+<div class="db-view" id="db-view">
+  <div class="db-filter-bar">
+    <span class="db-filter-lbl">Filtrar</span>
+    <select class="db-fsel" id="db-obra" onchange="renderDashboard()">
+      <option value="">Todas las obras</option>
+    </select>
+    <select class="db-fsel" id="db-tipo" onchange="renderDashboard()">
+      <option value="">Todas las categorías</option>
+      <option value="C1 - Personas">C1 · Personas</option>
+      <option value="C2 - Ejecución">C2 · Ejecución</option>
+      <option value="C3 - Abastecimiento">C3 · Abastecimiento</option>
+      <option value="C4 - Proyecto">C4 · Proyecto</option>
+      <option value="C5 - Inmobiliaria">C5 · Inmobiliaria</option>
+      <option value="C6 - Seguridad">C6 · Seguridad</option>
+      <option value="C7 - Entorno y comunidad">C7 · Entorno y comunidad</option>
+      <option value="C8 - Gestión">C8 · Gestión</option>
+    </select>
+    <select class="db-fsel" id="db-crit" onchange="renderDashboard()">
+      <option value="">Toda la criticidad</option>
+      <option value="Crítica">Crítica</option>
+      <option value="Alta">Alta</option>
+      <option value="Media">Media</option>
+      <option value="Baja">Baja</option>
+    </select>
+    <select class="db-fsel" id="db-periodo" onchange="renderDashboard()">
+      <option value="">Todo el período</option>
+      <option value="30">Últimos 30 días</option>
+      <option value="90">Últimos 90 días</option>
+      <option value="180">Últimos 6 meses</option>
+    </select>
+    <div class="db-fsep"></div>
+    <button class="db-clear" onclick="clearDbFilters()">✕ Limpiar</button>
+  </div>
+  <div class="db-body" id="db-body"></div>
+</div>
 
 <!-- MODAL -->
 <div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
@@ -734,6 +819,8 @@ function initApp(){
   av.textContent=(currentUser.displayName||currentUser.email||'?')[0].toUpperCase();
   av.title=`${currentUser.displayName||currentUser.email} — click para salir`;
   setSyncStatus('syncing','Conectando...');
+  // Activar pestaña alertas por defecto
+  document.getElementById('tab-alertas')?.classList.add('tab-active');
   startListener();
 }
 
@@ -747,6 +834,7 @@ function startListener(){
       document.getElementById('app').style.display='flex';
       setSyncStatus('ok','En vivo');
       render();
+      if(currentTab==='dashboard') renderDashboard();
       if(selectedId){
         const a=alerts.find(x=>x.id===selectedId);
         if(a) renderDetail(a); else closeDetail();
@@ -1360,6 +1448,269 @@ window.clearFilters=function(){
 };
 
 window.addEventListener('resize',render);
+
+// ── PESTAÑAS ──────────────────────────────────────────────────────────
+let currentTab = 'alertas';
+window.switchTab = function(tab){
+  currentTab = tab;
+  const layout    = document.querySelector('.layout');
+  const dbView    = document.getElementById('db-view');
+  const btnNueva  = document.getElementById('btn-nueva');
+  const tabAlertas   = document.getElementById('tab-alertas');
+  const tabDashboard = document.getElementById('tab-dashboard');
+  if(tab === 'dashboard'){
+    layout.style.display   = 'none';
+    dbView.classList.add('open');
+    if(btnNueva) btnNueva.style.display = 'none';
+    tabAlertas?.classList.remove('tab-active');
+    tabDashboard?.classList.add('tab-active');
+    updateDbObraOptions();
+    renderDashboard();
+  } else {
+    layout.style.display   = 'flex';
+    dbView.classList.remove('open');
+    if(btnNueva) btnNueva.style.display = '';
+    tabDashboard?.classList.remove('tab-active');
+    tabAlertas?.classList.add('tab-active');
+  }
+};
+
+// Actualizar opciones de obra en filtro dashboard
+function updateDbObraOptions(){
+  const sel = document.getElementById('db-obra');
+  if(!sel) return;
+  const obras = [...new Set(alerts.map(a=>a.obra).filter(Boolean))].sort();
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Todas las obras</option>' +
+    obras.map(o=>`<option value="${o}"${o===cur?' selected':''}>${o}</option>`).join('');
+}
+
+window.clearDbFilters = function(){
+  ['db-obra','db-tipo','db-crit','db-periodo'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){ el.value=''; el.classList.remove('active'); }
+  });
+  renderDashboard();
+};
+
+// ── RENDER DASHBOARD ──────────────────────────────────────────────────
+window.renderDashboard = function(){
+  const obraF    = document.getElementById('db-obra')?.value||'';
+  const tipoF    = document.getElementById('db-tipo')?.value||'';
+  const critF    = document.getElementById('db-crit')?.value||'';
+  const periodoF = parseInt(document.getElementById('db-periodo')?.value||'0');
+
+  // Marcar selectores activos
+  ['db-obra','db-tipo','db-crit','db-periodo'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('active', !!el.value);
+  });
+
+  // Filtrar datos
+  const now = Date.now();
+  let data = alerts.filter(a=>{
+    if(obraF && a.obra!==obraF) return false;
+    if(tipoF && a.tipo!==tipoF) return false;
+    if(critF && a.criticidad!==critF) return false;
+    if(periodoF){
+      const ts = a.creadoEn?.toMillis?.()||0;
+      if(now - ts > periodoF*24*60*60*1000) return false;
+    }
+    return true;
+  });
+
+  const activas   = data.filter(a=>a.estado==='Activa');
+  const enGestion = data.filter(a=>a.estado==='En gestión');
+  const resueltas = data.filter(a=>a.estado==='Resuelta');
+
+  // Días promedio resolución
+  const resTs = resueltas.filter(a=>a.creadoEn?.toMillis);
+  const avgDias = resTs.length
+    ? (resTs.reduce((s,a)=>s+(now-a.creadoEn.toMillis()),0)/resTs.length/86400000).toFixed(1)
+    : '—';
+
+  // Por obra
+  const obras = [...new Set(alerts.map(a=>a.obra).filter(Boolean))].sort();
+  const obraMax = Math.max(...obras.map(o=>data.filter(a=>a.obra===o).length),1);
+
+  // Por categoría
+  const cats = ['C1 - Personas','C2 - Ejecución','C3 - Abastecimiento','C4 - Proyecto',
+    'C5 - Inmobiliaria','C6 - Seguridad','C7 - Entorno y comunidad','C8 - Gestión'];
+  const catColors = {'C1 - Personas':'#7F77DD','C2 - Ejecución':'#5DCAA5',
+    'C3 - Abastecimiento':'#BA7517','C4 - Proyecto':'#185FA5','C5 - Inmobiliaria':'#D4537E',
+    'C6 - Seguridad':'#E24B4A','C7 - Entorno y comunidad':'#639922','C8 - Gestión':'#888780'};
+  const catMax = Math.max(...cats.map(t=>data.filter(a=>a.tipo===t).length),1);
+
+  // Por criticidad
+  const critData = [
+    {l:'Crítica', n:data.filter(a=>a.criticidad==='Crítica').length, c:'#A32D2D'},
+    {l:'Alta',    n:data.filter(a=>a.criticidad==='Alta').length,    c:'#D85A30'},
+    {l:'Media',   n:data.filter(a=>a.criticidad==='Media').length,   c:'#BA7517'},
+    {l:'Baja',    n:data.filter(a=>a.criticidad==='Baja').length,    c:'#639922'},
+  ];
+
+  // Evolución mensual (últimos 6 meses)
+  const meses = [];
+  for(let i=5;i>=0;i--){
+    const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-i);
+    meses.push({y:d.getFullYear(),m:d.getMonth(),lbl:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()]});
+  }
+  const mesData = meses.map(m=>data.filter(a=>{
+    const d=a.creadoEn?.toDate?.()||null;
+    return d && d.getFullYear()===m.y && d.getMonth()===m.m;
+  }).length);
+
+  // Alertas sin gestionar (activas, ordenadas por antigüedad)
+  const sinGestionar = [...activas]
+    .filter(a=>a.creadoEn?.toMillis)
+    .sort((a,b)=>a.creadoEn.toMillis()-b.creadoEn.toMillis())
+    .slice(0,5);
+
+  const critColor = c=>c==='Crítica'?'#E24B4A':c==='Alta'?'#D85A30':c==='Media'?'#BA7517':'#639922';
+  const diasDesde = ts=>Math.floor((now-(ts?.toMillis?.()||now))/86400000);
+
+  const labelFiltro = [
+    obraF||'Todas las obras',
+    tipoF ? tipoF.split(' - ')[0] : '',
+    critF||'',
+  ].filter(Boolean).join(' · ');
+
+  document.getElementById('db-body').innerHTML = `
+    <!-- KPIs -->
+    <div class="db-row db-r4">
+      <div class="db-card">
+        <div class="db-kpi-lbl">Total alertas</div>
+        <div class="db-kpi-num">${data.length}</div>
+        <div class="db-kpi-sub">${labelFiltro}</div>
+      </div>
+      <div class="db-card">
+        <div class="db-kpi-lbl">Activas</div>
+        <div class="db-kpi-num" style="color:var(--crit-critica-fg)">${activas.length}</div>
+        <div class="db-kpi-sub">${data.length?Math.round(activas.length/data.length*100):0}% del total</div>
+      </div>
+      <div class="db-card">
+        <div class="db-kpi-lbl">En gestión</div>
+        <div class="db-kpi-num" style="color:var(--crit-media-fg)">${enGestion.length}</div>
+        <div class="db-kpi-sub">${data.length?Math.round(enGestion.length/data.length*100):0}% del total</div>
+      </div>
+      <div class="db-card">
+        <div class="db-kpi-lbl">Días prom. resolución</div>
+        <div class="db-kpi-num" style="color:var(--crit-baja-fg)">${avgDias}</div>
+        <div class="db-kpi-sub">Alertas resueltas: ${resueltas.length}</div>
+      </div>
+    </div>
+
+    <!-- Fila 2 -->
+    <div class="db-row db-r3">
+      <div class="db-card">
+        <div class="db-card-title">Por categoría <span style="font-size:10px;color:var(--red);font-weight:400">↗ click para filtrar</span></div>
+        ${cats.map(t=>{
+          const n=data.filter(a=>a.tipo===t).length;
+          const pct=Math.round(n/catMax*100);
+          const lbl=t.replace(' - ',' · ');
+          return `<div class="db-bar-row" onclick="dbFilterCat('${t}')">
+            <div class="db-bar-lbl">${lbl}</div>
+            <div class="db-bar-wrap"><div class="db-bar-fill" style="width:${pct}%;background:${catColors[t]}"></div></div>
+            <div class="db-bar-num">${n}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="db-card">
+        <div class="db-card-title">Por criticidad</div>
+        <div style="position:relative;height:130px"><canvas id="db-crit-chart" role="img" aria-label="Distribución por criticidad">${critData.map(d=>d.l+' '+d.n).join(', ')}</canvas></div>
+        <div class="db-leg">
+          ${critData.map(d=>`<div class="db-leg-item"><span class="db-dot" style="background:${d.c}"></span>${d.l} ${d.n}</div>`).join('')}
+        </div>
+      </div>
+      <div class="db-card">
+        <div class="db-card-title">Por estado</div>
+        ${[
+          {n:'Activa',   v:activas.length,   c:'var(--crit-critica-fg)'},
+          {n:'En gestión',v:enGestion.length, c:'var(--blue)'},
+          {n:'Resuelta',  v:resueltas.length, c:'var(--crit-baja-fg)'},
+          {n:'Descartada',v:data.filter(a=>a.estado==='Descartada').length,c:'var(--text3)'},
+        ].map(s=>`<div class="db-st-row">
+          <div class="db-st-name"><span class="db-dot" style="background:${s.c}"></span>${s.n}</div>
+          <div class="db-st-bar"><div class="db-st-fill" style="width:${data.length?Math.round(s.v/data.length*100):0}%;background:${s.c}"></div></div>
+          <div class="db-st-num">${s.v}</div>
+        </div>`).join('')}
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+          <div class="db-card-title" style="margin-bottom:6px">Activas por obra</div>
+          <div>${obras.map(o=>{
+            const n=activas.filter(a=>a.obra===o).length;
+            return n>0?`<span class="db-chip" onclick="dbFilterObra('${o}')">${o} <strong>${n}</strong></span>`:'';
+          }).join('')}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fila 3 -->
+    <div class="db-row db-r2">
+      <div class="db-card">
+        <div class="db-card-title">Evolución mensual — alertas ingresadas</div>
+        <div style="position:relative;height:160px"><canvas id="db-mes-chart" role="img" aria-label="Evolución mensual">${meses.map((m,i)=>m.lbl+' '+mesData[i]).join(', ')}</canvas></div>
+      </div>
+      <div class="db-card">
+        <div class="db-card-title">Alertas activas sin gestionar <span style="font-size:10px;color:var(--text3);font-weight:400">(más antiguas)</span></div>
+        ${sinGestionar.length===0
+          ? '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Sin alertas activas</div>'
+          : sinGestionar.map(a=>`<div class="db-alerta-row">
+              <div class="db-alerta-bar" style="background:${critColor(a.criticidad)}"></div>
+              <div>
+                <div class="db-alerta-desc">${esc(a.descripcion||'')}</div>
+                <div class="db-alerta-meta">${esc(a.obra||'—')} · ${esc(a.tipo?.split(' - ')[0]||'—')} · ${diasDesde(a.creadoEn)} días</div>
+              </div>
+            </div>`).join('')
+        }
+      </div>
+    </div>
+  `;
+
+  // Dibujar gráficos
+  setTimeout(()=>{
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const textC = isDark?'rgba(255,255,255,.45)':'rgba(0,0,0,.35)';
+    const gridC = isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)';
+
+    const cCrit = document.getElementById('db-crit-chart');
+    if(cCrit){
+      if(cCrit._chart) cCrit._chart.destroy();
+      cCrit._chart = new Chart(cCrit,{
+        type:'doughnut',
+        data:{labels:critData.map(d=>d.l),datasets:[{data:critData.map(d=>d.n),backgroundColor:critData.map(d=>d.c),borderWidth:0,hoverOffset:4}]},
+        options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+ctx.parsed}}}}
+      });
+    }
+    const cMes = document.getElementById('db-mes-chart');
+    if(cMes){
+      if(cMes._chart) cMes._chart.destroy();
+      cMes._chart = new Chart(cMes,{
+        type:'bar',
+        data:{labels:meses.map(m=>m.lbl),datasets:[{label:'Alertas',data:mesData,backgroundColor:'#CC2929',borderRadius:4,borderSkipped:false}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
+          x:{ticks:{color:textC,font:{size:11}},grid:{display:false},border:{display:false}},
+          y:{ticks:{color:textC,font:{size:11},stepSize:1},grid:{color:gridC},border:{display:false}}
+        }}
+      });
+    }
+  },50);
+};
+
+window.dbFilterCat = function(cat){
+  const sel = document.getElementById('db-tipo');
+  if(!sel) return;
+  sel.value = sel.value===cat?'':cat;
+  sel.classList.toggle('active',!!sel.value);
+  renderDashboard();
+};
+window.dbFilterObra = function(obra){
+  const sel = document.getElementById('db-obra');
+  if(!sel) return;
+  sel.value = sel.value===obra?'':obra;
+  sel.classList.toggle('active',!!sel.value);
+  renderDashboard();
+};
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
 </html>
