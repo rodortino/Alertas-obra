@@ -67,6 +67,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 .sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:0;display:flex;flex-direction:column;}
 /* Tarjetas resumen */
 .sb-summary{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 10px 8px;border-bottom:1px solid var(--border);}
+.sb-summary-title{grid-column:1/-1;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);padding-bottom:2px;}
 .sum-card{background:var(--white);border-radius:7px;padding:8px 10px;border:1px solid var(--border);cursor:pointer;transition:all .15s;text-align:center;}
 .sum-card:hover{border-color:var(--text3);transform:translateY(-1px);}
 .sum-card.active-card{border-color:currentColor;}
@@ -314,21 +315,22 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
   <div class="layout">
     <!-- SIDEBAR -->
     <div class="sidebar desk-only">
-      <!-- Resumen alertas activas por criticidad -->
+      <!-- Resumen alertas vigentes por criticidad -->
       <div class="sb-summary">
-        <div class="sum-card sum-critica" id="sum-critica" onclick="sbFilter('criticidad','Crítica',null)" title="Alertas Activas Críticas">
+        <div class="sb-summary-title">Alertas vigentes</div>
+        <div class="sum-card sum-critica" id="sum-critica" onclick="sbFilter('criticidad','Crítica',null)" title="Filtrar por Crítica">
           <div class="sum-card-num" id="sum-n-critica">0</div>
           <div class="sum-card-lbl">Crítica</div>
         </div>
-        <div class="sum-card sum-alta" id="sum-alta" onclick="sbFilter('criticidad','Alta',null)" title="Alertas Activas Altas">
+        <div class="sum-card sum-alta" id="sum-alta" onclick="sbFilter('criticidad','Alta',null)" title="Filtrar por Alta">
           <div class="sum-card-num" id="sum-n-alta">0</div>
           <div class="sum-card-lbl">Alta</div>
         </div>
-        <div class="sum-card sum-media" id="sum-media" onclick="sbFilter('criticidad','Media',null)" title="Alertas Activas Medias">
+        <div class="sum-card sum-media" id="sum-media" onclick="sbFilter('criticidad','Media',null)" title="Filtrar por Media">
           <div class="sum-card-num" id="sum-n-media">0</div>
           <div class="sum-card-lbl">Media</div>
         </div>
-        <div class="sum-card sum-baja" id="sum-baja" onclick="sbFilter('criticidad','Baja',null)" title="Alertas Activas Bajas">
+        <div class="sum-card sum-baja" id="sum-baja" onclick="sbFilter('criticidad','Baja',null)" title="Filtrar por Baja">
           <div class="sum-card-num" id="sum-n-baja">0</div>
           <div class="sum-card-lbl">Baja</div>
         </div>
@@ -478,6 +480,56 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 <div class="toast" id="toast"></div>
 
 <script type="module">
+
+// ── MODO PREVIEW (?preview=1) ────────────────────────────────────────
+const IS_PREVIEW = new URLSearchParams(window.location.search).get('preview') === '1';
+
+if(IS_PREVIEW){
+  // Datos ficticios
+  const PREVIEW_USER = { email:'rodolfo.vassallo@rvc.cl', displayName:'Rodolfo Vassallo' };
+  const ahora = { toDate:()=>new Date(), toMillis:()=>Date.now() };
+  function fakeTs(daysAgo, hour=10, min=0){
+    const d = new Date(); d.setDate(d.getDate()-daysAgo);
+    d.setHours(hour,min,0,0);
+    return { toDate:()=>new Date(d), toMillis:()=>d.getTime() };
+  }
+  const PREVIEW_ALERTS = [
+    { id:'p1', descripcion:'Fiscalización SMA sin previo aviso en faena norte', obra:'Obra 1', criticidad:'Crítica', tipo:'C6 - Seguridad', situacion:'Fiscalización de organismo externo (SMA, Inspección, Mutual, DOM)', estado:'Activa', creadoPor:'rodolfo.vassallo@rvc.cl', creadoNombre:'Rodolfo Vassallo', creadoEn:fakeTs(0,9,15), adjuntos:[] },
+    { id:'p2', descripcion:'Vecino reclama por ruido de compactador nocturno', obra:'Obra 2', criticidad:'Alta', tipo:'C7 - Entorno y comunidad', situacion:'Ruido, restricciones horarias o multas por incumplimiento de normativa comunal', estado:'Activa', creadoPor:'rodrigo.lagos@rvc.cl', creadoNombre:'Rodrigo Lagos', creadoEn:fakeTs(0,14,30), adjuntos:[] },
+    { id:'p3', descripcion:'Quiebre de stock de moldajes — paraliza hormigonado losa 3', obra:'Obra 3', criticidad:'Crítica', tipo:'C3 - Abastecimiento', situacion:'Falta de materiales o quiebre de stock', estado:'En gestión', creadoPor:'rodolfo.vassallo@rvc.cl', creadoNombre:'Rodolfo Vassallo', creadoEn:fakeTs(1,8,0), adjuntos:[] },
+    { id:'p4', descripcion:'Subcontratista de electricidad no se presenta hace 3 días', obra:'Obra 1', criticidad:'Alta', tipo:'C1 - Personas', situacion:'Mala calidad subcontratista o falta de MO', estado:'Activa', creadoPor:'rodrigo.lagos@rvc.cl', creadoNombre:'Rodrigo Lagos', creadoEn:fakeTs(1,16,45), adjuntos:[] },
+    { id:'p5', descripcion:'Error en plano de fundaciones — RDI enviado sin respuesta', obra:'Obra 4', criticidad:'Alta', tipo:'C4 - Proyecto', situacion:'RDI o definiciones de proyecto sin respuesta oportuna', estado:'Activa', creadoPor:'rodolfo.vassallo@rvc.cl', creadoNombre:'Rodolfo Vassallo', creadoEn:fakeTs(2,11,20), adjuntos:[] },
+    { id:'p6', descripcion:'Mal clima laboral entre cuadrilla y capataz — alta rotación', obra:'Obra 2', criticidad:'Media', tipo:'C1 - Personas', situacion:'Bajo compromiso o mal clima laboral', estado:'Activa', creadoPor:'rodrigo.lagos@rvc.cl', creadoNombre:'Rodrigo Lagos', creadoEn:fakeTs(3,9,0), adjuntos:[] },
+    { id:'p7', descripcion:'Inicio de obra sin contrato firmado con inmobiliaria', obra:'Obra 5', criticidad:'Crítica', tipo:'C5 - Inmobiliaria', situacion:'Inicio de obra sin contrato o con definiciones contractuales incompletas', estado:'Activa', creadoPor:'rodolfo.vassallo@rvc.cl', creadoNombre:'Rodolfo Vassallo', creadoEn:fakeTs(4,15,10), adjuntos:[] },
+    { id:'p8', descripcion:'Bodega sin inventario — materiales sin control de stock', obra:'Obra 3', criticidad:'Media', tipo:'C3 - Abastecimiento', situacion:'Bodega desordenada — sin control de stock ni inventario', estado:'Resuelta', creadoPor:'rodrigo.lagos@rvc.cl', creadoNombre:'Rodrigo Lagos', creadoEn:fakeTs(5,10,30), adjuntos:[] },
+    { id:'p9', descripcion:'Estado de pago mes anterior no presentado aún', obra:'Obra 1', criticidad:'Alta', tipo:'C8 - Gestión', situacion:'Estado de pago listo o vencido pero no presentado — retraso de cobro sin justificación', estado:'Activa', creadoPor:'rodolfo.vassallo@rvc.cl', creadoNombre:'Rodolfo Vassallo', creadoEn:fakeTs(6,8,45), adjuntos:[] },
+    { id:'p10', descripcion:'Obras colindantes — revisar historial post venta', obra:'Obra 4', criticidad:'Baja', tipo:'C7 - Entorno y comunidad', situacion:'[INICIO DE OBRA] Obra colindante a proyecto anterior propio — consultar historial Post Venta', estado:'Descartada', creadoPor:'rodrigo.lagos@rvc.cl', creadoNombre:'Rodrigo Lagos', creadoEn:fakeTs(7,13,0), adjuntos:[] },
+  ];
+
+  // Sobrescribir initApp para entrar directo sin Firebase
+  document.addEventListener('DOMContentLoaded', ()=>{
+    document.getElementById('login-screen').style.display  = 'none';
+    document.getElementById('loading-screen').style.display= 'none';
+    document.getElementById('app').style.display           = 'flex';
+    currentUser = PREVIEW_USER;
+    alerts = PREVIEW_ALERTS;
+    setHeaderDate();
+    const av = document.getElementById('hdr-avatar');
+    av.textContent = 'R';
+    av.title = 'Modo Preview — ' + PREVIEW_USER.displayName;
+    setSyncStatus('ok','Preview');
+    // Marcar indicador preview en header
+    const syncText = document.getElementById('sync-text');
+    if(syncText) syncText.textContent = '👁 Preview';
+    render();
+  });
+
+  // Sobrescribir funciones Firebase con stubs que operan en memoria
+  window._previewSave = async function(data){ alerts.unshift({id:'p'+Date.now(),...data}); render(); };
+  window._previewUpdate = async function(id, data){ const i=alerts.findIndex(a=>a.id===id); if(i>-1) alerts[i]={...alerts[i],...data}; render(); if(selectedId===id){ const a=alerts.find(x=>x.id===id); if(a) renderDetail(a); } };
+  window._previewDelete = async function(id){ alerts=alerts.filter(a=>a.id!==id); if(selectedId===id){selectedId=null;closeDetail();} render(); };
+}
+
 import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, onSnapshot, query, orderBy, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
@@ -637,6 +689,7 @@ window.signIn = async function(){
   }
 };
 window.signOut = async function(){
+  if(IS_PREVIEW){ showToast('👁 Modo preview — sin sesión real'); return; }
   if(!confirm('¿Cerrar sesión?')) return;
   if(unsubscribe) unsubscribe();
   await fbSignOut(auth);
@@ -991,6 +1044,7 @@ window.closeDetail=function(){
 // ── CAMBIAR ESTADO ────────────────────────────────────────────────────
 window.cambiarEstado=async function(id,nuevoEstado){
   try{
+    if(IS_PREVIEW){ await window._previewUpdate(id,{estado:nuevoEstado}); showToast(`✓ Estado → ${nuevoEstado} (preview)`); return; }
     await updateDoc(doc(db,COLECCION,id),{estado:nuevoEstado});
     showToast(`✓ Estado → ${nuevoEstado}`);
   }catch(e){showToast('⚠ Error al actualizar');console.error(e);}
@@ -1189,6 +1243,17 @@ window.saveAlert=async function(){
   if(btn){btn.disabled=true;btn.textContent=pendingFiles.length?'Subiendo...':'Guardando...';}
 
   try{
+    if(IS_PREVIEW){
+      if(editId){
+        await window._previewUpdate(editId,{descripcion:desc,obra,criticidad,tipo,situacion,estado});
+      } else {
+        await window._previewSave({descripcion:desc,obra,criticidad,tipo,situacion,estado:'Activa',
+          creadoPor:currentUser.email, creadoNombre:currentUser.displayName||currentUser.email.split('@')[0],
+          creadoEn:{toDate:()=>new Date(),toMillis:()=>Date.now()}, adjuntos:[]});
+      }
+      showToast(editId?'✓ Alerta actualizada (preview)':'✓ Alerta registrada (preview)');
+      closeModal(); return;
+    }
     if(editId){
       await updateDoc(doc(db,COLECCION,editId),{descripcion:desc,obra,criticidad,tipo,situacion,estado});
       showToast('✓ Alerta actualizada');
@@ -1213,6 +1278,7 @@ window.saveAlert=async function(){
 window.deleteAlert=async function(id){
   if(!confirm('¿Eliminar esta alerta? Esta acción no se puede deshacer.')) return;
   try{
+    if(IS_PREVIEW){ await window._previewDelete(id); showToast('✓ Eliminada (preview)'); return; }
     await deleteDoc(doc(db,COLECCION,id));
     if(selectedId===id){selectedId=null;closeDetail();}
     showToast('✓ Alerta eliminada');
