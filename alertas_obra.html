@@ -1824,54 +1824,64 @@ window.renderDashboard = function(){
 
   // Dibujar gráficos
   setTimeout(()=>{
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const textC = isDark?'rgba(255,255,255,.75)':'rgba(0,0,0,.6)';
-    const gridC = isDark?'rgba(255,255,255,.08)':'rgba(0,0,0,.08)';
+    // Colores fijos para ejes — funcionan en modo claro y oscuro Safari
 
     const cCrit = document.getElementById('db-crit-chart');
     if(cCrit){
       if(cCrit._chart) cCrit._chart.destroy();
       cCrit._chart = new Chart(cCrit,{
         type:'doughnut',
-        data:{labels:critData.map(d=>d.l),datasets:[{data:critData.map(d=>d.n),backgroundColor:critData.map(d=>d.c),borderWidth:0,hoverOffset:4}]},
+        data:{labels:critData.map(d=>d.l),datasets:[{data:critData.map(d=>d.n),backgroundColor:critData.map(d=>d.c),borderWidth:2,borderColor:'#ffffff',hoverOffset:4}]},
         options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+ctx.parsed}}}}
       });
     }
     const cMes = document.getElementById('db-mes-chart');
     if(cMes){
       if(cMes._chart) cMes._chart.destroy();
-      const axisPlugin = {
-        id:'axisLines',
-        afterDraw(chart){
-          const {ctx,chartArea:{left,right,bottom,top},scales:{x,y}} = chart;
-          ctx.save();
-          ctx.strokeStyle = textC;
-          ctx.lineWidth = 1;
-          // eje X
-          ctx.beginPath(); ctx.moveTo(left,bottom); ctx.lineTo(right,bottom); ctx.stroke();
-          // eje Y
-          ctx.beginPath(); ctx.moveTo(left,top); ctx.lineTo(left,bottom); ctx.stroke();
-          ctx.restore();
-        }
-      };
+      const maxVal = Math.max(...mesData, 1);
       cMes._chart = new Chart(cMes,{
         type:'bar',
-        data:{labels:meses.map(m=>m.lbl),datasets:[{label:'Alertas',data:mesData,backgroundColor:'#CC2929',borderRadius:4,borderSkipped:false,minBarLength:3}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{
-          x:{
-            ticks:{color:textC,font:{size:12},autoSkip:false,maxRotation:0},
-            grid:{display:false},
-            border:{display:false}
-          },
-          y:{
-            ticks:{color:textC,font:{size:12},stepSize:1,precision:0},
-            grid:{color:gridC,drawBorder:false},
-            border:{display:false},
-            min:0,
-            grace:'15%'
+        data:{
+          labels: meses.map(m=>m.lbl),
+          datasets:[{
+            label:'Alertas',
+            data: mesData,
+            backgroundColor:'#CC2929',
+            borderRadius:4,
+            borderSkipped:false,
+            minBarLength:3
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' alertas'}}},
+          scales:{
+            x:{
+              ticks:{
+                color:'#5A5750',
+                font:{size:12,family:"'DM Sans',sans-serif"},
+                autoSkip:false,
+                maxRotation:0
+              },
+              grid:{display:false},
+              border:{color:'#9A948C',width:1}
+            },
+            y:{
+              ticks:{
+                color:'#5A5750',
+                font:{size:12,family:"'DM Sans',sans-serif"},
+                stepSize:1,
+                precision:0,
+                callback: v => Number.isInteger(v)?v:''
+              },
+              grid:{color:'rgba(0,0,0,0.06)'},
+              border:{color:'#9A948C',width:1},
+              min:0,
+              suggestedMax: maxVal + 1
+            }
           }
-        }},
-        plugins:[axisPlugin]
+        }
       });
     }
   },50);
