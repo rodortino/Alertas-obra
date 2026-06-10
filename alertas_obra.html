@@ -355,6 +355,8 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
         <button class="hbtn tab-btn" id="tab-alertas" onclick="switchTab('alertas')">Alertas</button>
         <button class="hbtn tab-btn" id="tab-dashboard" onclick="switchTab('dashboard')">Dashboard</button>
       </div>
+      <button class="hbtn desk-only" id="btn-excel" onclick="exportExcel()" style="display:none" title="Descargar Excel">↓ Excel</button>
+      <button class="hbtn desk-only" id="btn-informe" onclick="exportInforme()" style="display:none" title="Descargar informe HTML">↓ Informe</button>
       <button class="hbtn primary" onclick="openModal()" id="btn-nueva">+ Nueva alerta</button>
       <div class="hdr-avatar" id="hdr-avatar" onclick="signOut()" title="Cerrar sesión">?</div>
     </div>
@@ -822,6 +824,7 @@ function initApp(){
   setSyncStatus('syncing','Conectando...');
   // Activar pestaña alertas por defecto
   document.getElementById('tab-alertas')?.classList.add('tab-active');
+  const be = document.getElementById('btn-excel'); if(be) be.style.display='';
   startListener();
 }
 
@@ -1448,6 +1451,143 @@ window.clearFilters=function(){
   render();
 };
 
+
+// ── EXPORTAR EXCEL ────────────────────────────────────────────────────
+window.exportExcel = function(){
+  if(typeof XLSX === 'undefined'){ showToast('⚠ Cargando librería, intenta de nuevo'); return; }
+  const filtered = getFiltered();
+  const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  function fmtFechaExcel(ts){
+    if(!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+  const rows = filtered.map(a=>({
+    'Descripción':      a.descripcion   || '',
+    'Obra':             a.obra          || '',
+    'Criticidad':       a.criticidad    || '',
+    'Categoría':        a.tipo          || '',
+    'Situación':        a.situacion     || '',
+    'Estado':           a.estado        || '',
+    'Creado por':       a.creadoNombre  || a.creadoPor || '',
+    'Email':            a.creadoPor     || '',
+    'Fecha creación':   fmtFechaExcel(a.creadoEn),
+    'Adjuntos':         a.adjuntos?.length ? a.adjuntos.map(x=>x.name).join(', ') : '',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // Anchos de columna
+  ws['!cols'] = [
+    {wch:50},{wch:12},{wch:12},{wch:22},{wch:55},
+    {wch:14},{wch:20},{wch:30},{wch:20},{wch:30}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Alertas');
+  const fecha = new Date();
+  const nombre = `alertas_obra_${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2,'0')}${String(fecha.getDate()).padStart(2,'0')}.xlsx`;
+  XLSX.writeFile(wb, nombre);
+  showToast(`✓ Descargado: ${nombre}`);
+};
+
+// ── EXPORTAR INFORME HTML ─────────────────────────────────────────────
+window.exportInforme = function(){
+  const dbBody = document.getElementById('db-body');
+  if(!dbBody){ showToast('⚠ Sin datos en el dashboard'); return; }
+
+  // Leer filtros activos para el título
+  const obraF   = document.getElementById('db-obra')?.value   || 'Todas las obras';
+  const tipoF   = document.getElementById('db-tipo')?.value   || '';
+  const critF   = document.getElementById('db-crit')?.value   || '';
+  const perF    = document.getElementById('db-periodo')?.options[document.getElementById('db-periodo').selectedIndex]?.text || 'Todo el período';
+  const filtroTxt = [obraF, tipoF?tipoF.split(' - ')[0]:'', critF, perF].filter(Boolean).join(' · ');
+  const fecha = new Date();
+  const fechaTxt = `${fecha.getDate()} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][fecha.getMonth()]} ${fecha.getFullYear()}`;
+
+  // CSS inline para el informe
+  const estilos = `
+    body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;background:#F5F3EE;color:#1A1916;}
+    .inf-header{background:#CC2929;color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;}
+    .inf-title{font-size:20px;font-weight:600;}
+    .inf-sub{font-size:12px;opacity:.75;margin-top:2px;}
+    .inf-meta{font-size:12px;opacity:.8;text-align:right;}
+    .inf-body{padding:20px 28px;}
+    .db-row{display:grid;gap:10px;margin-bottom:10px;}
+    .db-r4{grid-template-columns:repeat(4,minmax(0,1fr));}
+    .db-r3{grid-template-columns:1.3fr 1fr 1fr;}
+    .db-r2{grid-template-columns:1fr 1fr;}
+    .db-card{background:#fff;border:1px solid #D9D4CB;border-radius:10px;padding:12px 14px;}
+    .db-kpi-lbl{font-size:10px;color:#9A948C;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+    .db-kpi-num{font-size:26px;font-weight:600;line-height:1;}
+    .db-kpi-sub{font-size:11px;color:#9A948C;margin-top:3px;}
+    .db-card-title{font-size:10px;font-weight:600;color:#9A948C;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+    .db-bar-row{display:flex;align-items:center;gap:7px;margin-bottom:6px;padding:2px 4px;}
+    .db-bar-lbl{font-size:11px;color:#5A5750;width:118px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .db-bar-wrap{flex:1;background:#E6E1D9;border-radius:3px;height:7px;overflow:hidden;}
+    .db-bar-fill{height:100%;border-radius:3px;}
+    .db-bar-num{font-size:11px;color:#9A948C;width:16px;text-align:right;flex-shrink:0;}
+    .db-st-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #D9D4CB;}
+    .db-st-row:last-child{border-bottom:none;}
+    .db-st-name{font-size:12px;color:#1A1916;display:flex;align-items:center;gap:6px;}
+    .db-st-bar{width:65px;background:#E6E1D9;border-radius:3px;height:5px;overflow:hidden;margin:0 8px;}
+    .db-st-fill{height:100%;border-radius:3px;}
+    .db-st-num{font-size:11px;color:#9A948C;width:16px;text-align:right;}
+    .db-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .db-leg{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+    .db-leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:#9A948C;}
+    .db-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;border:1px solid #D9D4CB;background:#EEEAE3;color:#5A5750;margin:0 3px 3px 0;}
+    .db-chip strong{color:#1A1916;}
+    .db-alerta-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #D9D4CB;}
+    .db-alerta-row:last-child{border-bottom:none;}
+    .db-alerta-bar{width:3px;min-height:30px;border-radius:2px;flex-shrink:0;margin-top:3px;}
+    .db-alerta-desc{font-size:12px;font-weight:500;color:#1A1916;line-height:1.4;margin-bottom:2px;}
+    .db-alerta-meta{font-size:11px;color:#9A948C;}
+    canvas{max-width:100%;height:auto!important;}
+    .no-print{display:none!important;}
+    @media print{body{background:#fff;}.inf-header{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+  `;
+
+  // Convertir canvas a imágenes para el informe
+  let bodyHTML = dbBody.innerHTML;
+  dbBody.querySelectorAll('canvas').forEach(canvas=>{
+    const img = `<img src="${canvas.toDataURL('image/png')}" style="width:100%;height:160px;object-fit:contain">`;
+    bodyHTML = bodyHTML.replace(canvas.outerHTML, img);
+  });
+
+  // Quitar onclick y cursores del informe
+  bodyHTML = bodyHTML.replace(/onclick="[^"]*"/g,'').replace(/style="cursor:pointer[^"]*"/g,'').replace(/onmouseover="[^"]*"/g,'').replace(/onmouseout="[^"]*"/g,'');
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Informe Alertas Obra — ${fechaTxt}</title>
+<style>${estilos}</style>
+</head>
+<body>
+<div class="inf-header">
+  <div>
+    <div class="inf-title">Alertas Obra — Informe</div>
+    <div class="inf-sub">${filtroTxt}</div>
+  </div>
+  <div class="inf-meta">
+    Generado el ${fechaTxt}<br>
+    RVC Constructora
+  </div>
+</div>
+<div class="inf-body">${bodyHTML}</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const nombre = `informe_alertas_${fecha.getFullYear()}${String(fecha.getMonth()+1).padStart(2,'0')}${String(fecha.getDate()).padStart(2,'0')}.html`;
+  a.href = url; a.download = nombre; a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✓ Descargado: ${nombre}`);
+};
+
 window.addEventListener('resize',render);
 
 // ── PESTAÑAS ──────────────────────────────────────────────────────────
@@ -1463,6 +1603,10 @@ window.switchTab = function(tab){
     layout.style.display   = 'none';
     dbView.classList.add('open');
     if(btnNueva) btnNueva.style.display = 'none';
+    const btnExcel = document.getElementById('btn-excel');
+    const btnInforme = document.getElementById('btn-informe');
+    if(btnExcel) btnExcel.style.display = 'none';
+    if(btnInforme) btnInforme.style.display = '';
     tabAlertas?.classList.remove('tab-active');
     tabDashboard?.classList.add('tab-active');
     updateDbObraOptions();
@@ -1471,6 +1615,10 @@ window.switchTab = function(tab){
     layout.style.display   = 'flex';
     dbView.classList.remove('open');
     if(btnNueva) btnNueva.style.display = '';
+    const btnExcel = document.getElementById('btn-excel');
+    const btnInforme = document.getElementById('btn-informe');
+    if(btnExcel) btnExcel.style.display = '';
+    if(btnInforme) btnInforme.style.display = 'none';
     tabDashboard?.classList.remove('tab-active');
     tabAlertas?.classList.add('tab-active');
   }
@@ -1744,5 +1892,6 @@ window.dbOpenAlerta = function(id){
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
