@@ -917,17 +917,22 @@ function render(){
   document.getElementById('cnt-alta').textContent       =alerts.filter(a=>a.criticidad==='Alta').length;
   document.getElementById('cnt-media').textContent      =alerts.filter(a=>a.criticidad==='Media').length;
   document.getElementById('cnt-baja').textContent       =alerts.filter(a=>a.criticidad==='Baja').length;
-  // Tarjetas resumen — solo alertas Activas
-  const activas = alerts.filter(a=>a.estado==='Activa');
-  document.getElementById('sum-n-critica').textContent = activas.filter(a=>a.criticidad==='Crítica').length;
-  document.getElementById('sum-n-alta').textContent    = activas.filter(a=>a.criticidad==='Alta').length;
-  document.getElementById('sum-n-media').textContent   = activas.filter(a=>a.criticidad==='Media').length;
-  document.getElementById('sum-n-baja').textContent    = activas.filter(a=>a.criticidad==='Baja').length;
+  // Tarjetas resumen — Activas + En gestión = vigentes
+  const vigentes = alerts.filter(a=>a.estado==='Activa'||a.estado==='En gestión');
+  document.getElementById('sum-n-critica').textContent = vigentes.filter(a=>a.criticidad==='Crítica').length;
+  document.getElementById('sum-n-alta').textContent    = vigentes.filter(a=>a.criticidad==='Alta').length;
+  document.getElementById('sum-n-media').textContent   = vigentes.filter(a=>a.criticidad==='Media').length;
+  document.getElementById('sum-n-baja').textContent    = vigentes.filter(a=>a.criticidad==='Baja').length;
   // Resaltar tarjeta activa si hay filtro de criticidad
   ['critica','alta','media','baja'].forEach(k=>{
     const card = document.getElementById('sum-'+k);
     if(card) card.style.opacity = filters.criticidad && filters.criticidad.toLowerCase()!==k ? '0.45' : '1';
   });
+  // Actualizar title de tarjetas
+  document.getElementById('sum-critica')?.setAttribute('title','Crítica: Activas + En gestión');
+  document.getElementById('sum-alta')?.setAttribute('title','Alta: Activas + En gestión');
+  document.getElementById('sum-media')?.setAttribute('title','Media: Activas + En gestión');
+  document.getElementById('sum-baja')?.setAttribute('title','Baja: Activas + En gestión');
 
   const tipos=[...new Set(alerts.map(a=>a.tipo).filter(Boolean))].sort();
   document.getElementById('tipo-filters').innerHTML=tipos.map(t=>
