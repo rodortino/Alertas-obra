@@ -56,6 +56,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 .hbtn:hover{background:rgba(255,255,255,.25);}
 .hbtn.primary{background:#fff;color:var(--red);font-weight:600;display:flex;align-items:center;gap:4px;}
 .hbtn.primary:hover{background:#f5f5f5;}
+.hbtn svg{flex-shrink:0;}
 .hbtn.tab-active{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.6);}
 /* ── DASHBOARD ── */
 .db-view{display:none;flex:1;overflow-y:auto;flex-direction:column;background:var(--cream);}
@@ -355,9 +356,17 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
         <button class="hbtn tab-btn" id="tab-alertas" onclick="switchTab('alertas')">Alertas</button>
         <button class="hbtn tab-btn" id="tab-dashboard" onclick="switchTab('dashboard')">Dashboard</button>
       </div>
-      <button class="hbtn desk-only" id="btn-excel" onclick="exportExcel()" style="display:none" title="Descargar Excel">↓ Excel</button>
-      <button class="hbtn desk-only" id="btn-informe" onclick="exportInforme()" style="display:none" title="Descargar informe HTML">↓ Informe</button>
-      <button class="hbtn primary" onclick="openModal()" id="btn-nueva">+ Nueva alerta</button>
+      <div class="desk-only" style="display:flex;gap:4px;align-items:center">
+        <button class="hbtn" id="btn-excel" onclick="exportExcel()" style="display:none;gap:5px;align-items:center" title="Descargar Excel con alertas visibles">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M14 2H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zM5.5 11H4l2-3-2-3h1.5l1.25 2L8 5h1.5l-2 3 2 3H8l-1.25-2L5.5 11zm5 0H9V5h1v5h1v1z"/></svg>
+          Excel
+        </button>
+        <button class="hbtn" id="btn-informe" onclick="exportInforme()" style="display:none;gap:5px;align-items:center" title="Descargar informe del dashboard">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M14 2H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zm-1 10H3V4h10v8zM5 7h6v1H5zm0 2h6v1H5zm0-4h3v1H5z"/></svg>
+          Informe
+        </button>
+      </div>
+      <button class="hbtn primary" onclick="openModal()" id="btn-nueva" style="display:flex;align-items:center;gap:5px">+ Nueva alerta</button>
       <div class="hdr-avatar" id="hdr-avatar" onclick="signOut()" title="Cerrar sesión">?</div>
     </div>
   </div>
@@ -824,7 +833,7 @@ function initApp(){
   setSyncStatus('syncing','Conectando...');
   // Activar pestaña alertas por defecto
   document.getElementById('tab-alertas')?.classList.add('tab-active');
-  const be = document.getElementById('btn-excel'); if(be) be.style.display='';
+  const be = document.getElementById('btn-excel'); if(be) be.style.display='flex';
   startListener();
 }
 
@@ -1602,7 +1611,6 @@ window.switchTab = function(tab){
   if(tab === 'dashboard'){
     layout.style.display   = 'none';
     dbView.classList.add('open');
-    if(btnNueva) btnNueva.style.display = 'none';
     const btnExcel = document.getElementById('btn-excel');
     const btnInforme = document.getElementById('btn-informe');
     if(btnExcel) btnExcel.style.display = 'none';
@@ -1614,7 +1622,6 @@ window.switchTab = function(tab){
   } else {
     layout.style.display   = 'flex';
     dbView.classList.remove('open');
-    if(btnNueva) btnNueva.style.display = '';
     const btnExcel = document.getElementById('btn-excel');
     const btnInforme = document.getElementById('btn-informe');
     if(btnExcel) btnExcel.style.display = '';
