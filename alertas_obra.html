@@ -574,6 +574,10 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);c
 </div>
 
 
+<!-- INPUTS FILE ADJUNTOS -->
+<input type="file" id="file-input" accept="image/*,.pdf,application/pdf" multiple style="display:none" onchange="onFileSelected(event)">
+<input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="onFileSelected(event)">
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -992,7 +996,7 @@ function render(){
     list.innerHTML=filtered.map(a=>{
       const color=critColor(a.criticidad);
       const meta=[a.obra,a.tipo,nombreVisible(a)].filter(Boolean).join(' · ');
-      const adjIcon_=a.adjuntos?.length?'📎 ':'';
+      const adjIcon_=(a.adjuntos?.length)?'📎 ':''; 
       return `<div class="mob-row" onclick="openDetail('${a.id}')">
         <div class="mob-crit-bar" style="background:${color}"></div>
         <div class="mob-body">
@@ -1084,12 +1088,27 @@ window.openDetail=function(id){
 
 function adjListHTML(adjuntos){
   if(!adjuntos||adjuntos.length===0) return '<div style="font-size:12px;color:var(--text3)">Sin adjuntos</div>';
-  return `<div class="dp-adj-list">${adjuntos.map(adj=>`
-    <a class="dp-adj-item" href="${adj.url}" target="_blank" rel="noopener">
-      <span class="dp-adj-icon">${adjIcon(adj.tipo)}</span>
-      <span class="dp-adj-name">${esc(adj.name)}</span>
-      <span class="dp-adj-open">Abrir ↗</span>
-    </a>`).join('')}</div>`;
+  return `<div class="dp-adj-list">${adjuntos.map(adj=>{
+    if(adj.tipo==='image' && adj.b64){
+      return `<div class="dp-adj-item" style="flex-direction:column;align-items:flex-start;gap:6px;cursor:default">
+        <img src="${adj.b64}" style="width:100%;border-radius:6px;max-height:200px;object-fit:contain;background:#f5f3ee" alt="${esc(adj.name)}">
+        <a href="${adj.b64}" download="${esc(adj.name)}" style="font-size:11px;color:var(--blue);text-decoration:none">↓ Descargar imagen</a>
+      </div>`;
+    } else if(adj.tipo==='pdf' && adj.b64){
+      return `<a class="dp-adj-item" href="${adj.b64}" download="${esc(adj.name)}">
+        <span class="dp-adj-icon">📄</span>
+        <span class="dp-adj-name">${esc(adj.name)}</span>
+        <span class="dp-adj-open">↓ Descargar</span>
+      </a>`;
+    } else if(adj.url){
+      return `<a class="dp-adj-item" href="${adj.url}" target="_blank" rel="noopener">
+        <span class="dp-adj-icon">${adjIcon(adj.tipo)}</span>
+        <span class="dp-adj-name">${esc(adj.name)}</span>
+        <span class="dp-adj-open">Abrir ↗</span>
+      </a>`;
+    }
+    return '';
+  }).join('')}</div>`;
 }
 
 function renderDetail(a){
@@ -1158,8 +1177,8 @@ window.cambiarEstado=async function(id,nuevoEstado){
 };
 
 // ── ADJUNTOS: UI ──────────────────────────────────────────────────────
-window.triggerCamera=function(){ showToast('📷 Adjuntos disponibles próximamente'); };
-window.triggerFile  =function(){ showToast('📎 Adjuntos disponibles próximamente'); };
+window.triggerCamera=function(){ document.getElementById('camera-input').click(); };
+window.triggerFile  =function(){ document.getElementById('file-input').click(); };
 
 window.onFileSelected=function(event){
   const files=Array.from(event.target.files);
@@ -1230,6 +1249,126 @@ window.updateSituaciones = function(selectTipoEl) {
       lista.map(s => `<option value="${s.replace(/"/g,'&quot;')}">${s}</option>`).join('');
   }
 };
+// ── ADJUNTOS — base64 en Firestore ──────────────────────────────────
+
+const MAX_IMG_SIZE  = 800;   // px máximo lado largo
+const IMG_QUALITY   = 0.72;  // calidad JPEG
+const MAX_PDF_BYTES = 500 * 1024; // 500KB para PDF
+const MAX_IMG_BYTES = 480 * 1024; // 480KB para imagen comprimida
+
+// Comprimir imagen a canvas y devolver base64
+function compressImage(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e =>{
+      const img = new Image();
+      img.onload = ()=>{
+        let {width:w, height:h} = img;
+        if(w > MAX_IMG_SIZE || h > MAX_IMG_SIZE){
+          const ratio = Math.min(MAX_IMG_SIZE/w, MAX_IMG_SIZE/h);
+          w = Math.round(w*ratio); h = Math.round(h*ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const b64 = canvas.toDataURL('image/jpeg', IMG_QUALITY);
+        // Verificar tamaño final
+        const bytes = Math.round((b64.length - 22) * 3/4);
+        if(bytes > MAX_IMG_BYTES){
+          // Segunda pasada con menor calidad
+          const b64b = canvas.toDataURL('image/jpeg', 0.55);
+          resolve(b64b);
+        } else {
+          resolve(b64);
+        }
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Leer PDF como base64
+function readPdfBase64(file){
+  return new Promise((resolve, reject)=>{
+    if(file.size > MAX_PDF_BYTES){
+      reject(new Error(`PDF demasiado grande (${(file.size/1024).toFixed(0)}KB). Máximo 500KB. Comprímelo antes de subir.`));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+window.onFileSelected = async function(event){
+  const files = Array.from(event.target.files);
+  for(const file of files){
+    const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    const isImg = file.type.startsWith('image/');
+    if(!isPDF && !isImg){ showToast('⚠ Solo imágenes y PDF'); continue; }
+    try {
+      showToast('Procesando...');
+      let b64, tipo, previewUrl = null;
+      if(isPDF){
+        b64 = await readPdfBase64(file);
+        tipo = 'pdf';
+      } else {
+        b64 = await compressImage(file);
+        tipo = 'image';
+        previewUrl = b64;
+      }
+      const bytes = Math.round((b64.length - 22) * 3/4);
+      pendingFiles.push({name:file.name, tipo, b64, previewUrl, size:bytes});
+      renderAdjuntosForm();
+    } catch(err){
+      showToast('⚠ ' + (err.message||'Error al procesar archivo'));
+    }
+  }
+  event.target.value = '';
+};
+
+window.removePending = function(idx){
+  pendingFiles.splice(idx, 1);
+  renderAdjuntosForm();
+};
+
+window.removeExisting = function(idx){
+  existingAdjuntos.splice(idx, 1);
+  renderAdjuntosForm();
+};
+
+function renderAdjuntosForm(){
+  const preview = document.getElementById('adj-preview');
+  if(!preview) return;
+  const all = [
+    ...existingAdjuntos.map((a,i)=>({...a, existing:true, idx:i})),
+    ...pendingFiles.map((f,i)=>({...f, existing:false, idx:i}))
+  ];
+  if(!all.length){
+    preview.innerHTML = '<div class="adj-hint">Foto desde cámara, imagen desde galería o PDF (máx 500KB)</div>';
+    return;
+  }
+  preview.innerHTML = all.map(item=>{
+    const icon = item.tipo==='pdf'?'📄':item.tipo==='image'?'🖼️':'📎';
+    const size = item.existing ? 'guardado' : fmtSize(item.size);
+    const thumb = item.previewUrl
+      ? `<img src="${item.previewUrl}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0">`
+      : `<span style="font-size:22px;flex-shrink:0">${icon}</span>`;
+    const delFn = item.existing ? `removeExisting(${item.idx})` : `removePending(${item.idx})`;
+    return `<div class="adj-item">
+      ${thumb}
+      <span class="adj-item-name">${esc(item.name)}</span>
+      <span class="adj-item-size">${size}</span>
+      <button class="adj-item-del" onclick="${delFn}" title="Quitar">✕</button>
+    </div>`;
+  }).join('');
+}
+
 // uploadFiles — disponible cuando se active Firebase Storage
 
 // ── MODAL ─────────────────────────────────────────────────────────────
@@ -1278,10 +1417,14 @@ function buildForm(a){
       </select>
     </div>` : ''}
     <div class="fg">
-      <label class="fl">Fotos y adjuntos</label>
+      <label class="fl">Fotos y adjuntos <span style="font-size:10px;color:var(--text3);font-weight:400;text-transform:none">(imágenes y PDF · máx 500KB c/u)</span></label>
       <div class="adjunto-area">
-        <div class="adj-hint" style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">
-          📷 Adjuntos disponibles próximamente
+        <div class="adjunto-btns">
+          <button type="button" class="adj-btn" onclick="triggerCamera()">📷 Cámara</button>
+          <button type="button" class="adj-btn" onclick="triggerFile()">📎 Archivo / Galería</button>
+        </div>
+        <div class="adjunto-preview" id="adj-preview">
+          <div class="adj-hint">Foto desde cámara, imagen desde galería o PDF (máx 500KB)</div>
         </div>
       </div>
     </div>
@@ -1362,15 +1505,17 @@ window.saveAlert=async function(){
       closeModal(); return;
     }
     if(editId){
-      await updateDoc(doc(db,COLECCION,editId),{descripcion:desc,obra,criticidad,tipo,situacion,estado});
+      const adjuntosEdit = [...existingAdjuntos, ...pendingFiles.map(f=>({name:f.name,tipo:f.tipo,b64:f.b64}))];
+      await updateDoc(doc(db,COLECCION,editId),{descripcion:desc,obra,criticidad,tipo,situacion,estado,adjuntos:adjuntosEdit});
       showToast('✓ Alerta actualizada');
     } else {
+      const adjuntosNuevos = pendingFiles.map(f=>({name:f.name, tipo:f.tipo, b64:f.b64}));
       await addDoc(collection(db,COLECCION),{
         descripcion:desc,obra,criticidad,tipo,situacion,estado:'Activa',
         creadoPor:currentUser.email,
         creadoNombre:currentUser.displayName||currentUser.email.split('@')[0],
         creadoEn:serverTimestamp(),
-        adjuntos:[]
+        adjuntos:adjuntosNuevos
       });
       showToast('✓ Alerta registrada');
     }
