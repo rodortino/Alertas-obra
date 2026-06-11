@@ -1,10 +1,10 @@
-const CACHE = 'alertas-obra-v6';
+const CACHE = 'alertas-obra-v7';
 const ASSETS = [
-  '/AlertasObra/',
-  '/AlertasObra/index.html',
-  '/AlertasObra/manifest.json',
-  '/AlertasObra/icons/icon-192x192.png',
-  '/AlertasObra/icons/icon-512x512.png',
+  '/Alertas-obra/',
+  '/Alertas-obra/index.html',
+  '/Alertas-obra/manifest.json',
+  '/Alertas-obra/icons/icon-192x192.png',
+  '/Alertas-obra/icons/icon-512x512.png',
 ];
 
 self.addEventListener('install', e => {
@@ -23,6 +23,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => caches.match('/AlertasObra/index.html')))
+    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => caches.match('/Alertas-obra/index.html')))
   );
 });
