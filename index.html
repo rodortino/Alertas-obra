@@ -1197,35 +1197,7 @@ window.removePending=function(idx){
   renderAdjuntosForm();
 };
 
-function renderAdjuntosForm(){
-  const preview=document.getElementById('adj-preview');
-  if(!preview) return;
-  const allItems=[
-    ...existingAdjuntos.map((a,i)=>({...a,existing:true,idx:i})),
-    ...pendingFiles.map((f,i)=>({...f,existing:false,idx:i}))
-  ];
-  if(allItems.length===0){
-    preview.innerHTML='<div class="adj-hint">📷 Foto desde cámara o 📎 archivo desde galería / explorador</div>';
-    return;
-  }
-  preview.innerHTML=allItems.map(item=>{
-    if(item.existing){
-      return `<div class="adj-item">
-        <span class="adj-item-icon">${adjIcon(item.tipo)}</span>
-        <span class="adj-item-name">${esc(item.name)}</span>
-        <span class="adj-item-size">guardado</span>
-        <button class="adj-item-del" onclick="removeExisting(${item.idx})" title="Quitar">✕</button>
-      </div>`;
-    } else {
-      return `<div class="adj-item">
-        <span class="adj-item-icon">${adjIcon(item.tipo)}</span>
-        <span class="adj-item-name">${esc(item.name)}</span>
-        <span class="adj-item-size">${fmtSize(item.size)}</span>
-        <button class="adj-item-del" onclick="removePending(${item.idx})" title="Quitar">✕</button>
-      </div>`;
-    }
-  }).join('');
-}
+// renderAdjuntosForm — definida más abajo con soporte de thumbnails
 
 window.removeExisting=function(idx){
   existingAdjuntos.splice(idx,1);
